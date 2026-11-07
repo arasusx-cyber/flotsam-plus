@@ -1,6 +1,7 @@
 # Flotsam Plus
 
 **Surowce na życzenie, osobne przełączniki głodu i pragnienia oraz polskie menu w grze.**
+![Menu Flotsam Plus](docs/images/menu.png)
 
 Dodatek do **Flotsam** na Windows, działający przez **BepInEx 5.4.x**.
 Menu otwierasz klawiszem **F8**. Może działać razem z Flotsam Trainer
