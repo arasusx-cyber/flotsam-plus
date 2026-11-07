@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Puchatek.FlotsamPlus
 {
-    [BepInPlugin(Guid, "Flotsam: surowce i potrzeby", "1.0.0")]
+    [BepInPlugin(Guid, "Flotsam Plus", "1.1.0")]
     [BepInProcess("Flotsam.exe")]
     public sealed class Plugin : BaseUnityPlugin
     {
@@ -19,12 +19,29 @@ namespace Puchatek.FlotsamPlus
         internal static Plugin Instance;
         internal ConfigEntry<bool> NoHunger;
         internal ConfigEntry<bool> NoThirst;
+        internal ConfigEntry<bool> NoRest;
+        internal ConfigEntry<bool> FreeTravel;
+        internal ConfigEntry<bool> InstantBuild;
+        internal ConfigEntry<float> ShipSpeed;
+        internal ConfigEntry<float> ShipTurning;
+        internal ConfigEntry<float> ShipAcceleration;
+        internal ConfigEntry<float> ShipBraking;
+        internal ConfigEntry<float> ResearchSpeed;
+        internal bool ShipReady;
+        internal bool PhysicsReady;
+        internal bool EnergyReady;
+        internal bool BuildingReady;
+        internal bool ResearchReady;
+        internal bool RestReady;
         private ConfigEntry<KeyCode> _menuKey;
         private Harmony _harmony;
         private bool _open;
         private bool _patchesReady;
         private Rect _window = new Rect(30, 55, 590, 650);
         private Vector2 _scroll;
+        private Vector2 _settingsScroll;
+        private int _tab;
+        private static readonly string[] Tabs = { "Statek", "Mieszkańcy", "Budowa i badania", "Surowce" };
         private GUIStyle _headerStyle;
         private GUIStyle _smallStyle;
         private GUIStyle _messageStyle;
@@ -59,21 +76,81 @@ namespace Puchatek.FlotsamPlus
                 "Mieszkańcy Twojej osady nie potrzebują jedzenia.");
             NoThirst = Config.Bind("Potrzeby", "WylaczPragnienie", false,
                 "Mieszkańcy Twojej osady nie potrzebują wody.");
+            NoRest = Config.Bind("Potrzeby", "WylaczSen", false,
+                "Wyłącza nocne projekty snu mieszkańców Twojej osady.");
+            FreeTravel = Config.Bind("Statek", "PodrozBezEnergii", false,
+                "Ruch osady nie zużywa energii; pozostałe urządzenia działają normalnie.");
+            InstantBuild = Config.Bind("Budowa", "NatychmiastowaBudowa", false,
+                "Nowe budynki, łodzie, dekoracje i ulepszenia powstają od razu, bez surowców.");
+            ShipSpeed = BindMultiplier("Statek", "Predkosc", 5f);
+            ShipTurning = BindMultiplier("Statek", "Zwrotnosc", 5f);
+            ShipAcceleration = BindMultiplier("Statek", "Przyspieszenie", 5f);
+            ShipBraking = BindMultiplier("Statek", "Hamowanie", 5f);
+            ResearchSpeed = BindMultiplier("Badania", "SzybkoscBadan", 100f);
             _menuKey = Config.Bind("Menu", "Klawisz", KeyCode.F8,
                 "Klawisz otwierający i zamykający menu dodatku.");
             _harmony = new Harmony(Guid);
+            _patchesReady = PatchGroup("Potrzeby", typeof(HungerThirstIncreasePatch),
+                typeof(LoadedNeedsPatch), typeof(ReserveConsumablesPatch),
+                typeof(StartConsumeProjectPatch), typeof(RetryConsumeProjectPatch));
+            PatchGroup("Menu", typeof(MenuInputPatch));
+            ShipReady = PatchGroup("Prędkość i skręt", typeof(ShipSpeedPatch),
+                typeof(ShipTurningPatch), typeof(PathMovementPatch));
+            EnergyReady = PatchGroup("Energia podróży", typeof(TravelEnergyPatch),
+                typeof(TravelCostPatch), typeof(TravelRangePatch), typeof(TravelCooldownPatch));
+            PhysicsReady = PatchGroup("Przyspieszenie i hamowanie",
+                typeof(ShipPhysicsPatch), typeof(ShipForcePatch));
+            BuildingReady = PatchGroup("Budowanie", typeof(InstantBuildingPatch));
+            ResearchReady = PatchGroup("Badania", typeof(ResearchSpeedPatch));
+            RestReady = PatchGroup("Sen", typeof(RestNightPatch));
+            Logger.LogInfo("Flotsam Plus 1.1.0 gotowy. Menu: " + _menuKey.Value);
+        }
+
+        private ConfigEntry<float> BindMultiplier(string section, string key, float maximum)
+        {
+            return Config.Bind(section, key, 1f, new ConfigDescription(
+                "Mnożnik. 1 = normalna wartość gry.", new AcceptableValueRange<float>(1f, maximum)));
+        }
+
+        private bool PatchGroup(string name, params Type[] patchTypes)
+        {
             try
             {
-                _harmony.PatchAll(typeof(Plugin).Assembly);
-                _patchesReady = true;
-                Logger.LogInfo("Flotsam Plus 1.0.0 gotowy. Menu: " + _menuKey.Value);
+                foreach (Type type in patchTypes) _harmony.CreateClassProcessor(type).Patch();
+                return true;
             }
             catch (Exception error)
             {
-                _harmony.UnpatchSelf();
-                _message = "Nie udało się włączyć obsługi potrzeb. Sprawdź LogOutput.log.";
-                Logger.LogError(error);
+                // Partially installed groups remain inert because each callback
+                // checks its group's ready flag. Other groups keep working.
+                Logger.LogError("Nie uruchomiono grupy: " + name + ". " + error);
+                return false;
             }
+        }
+
+        internal static bool IsPlayer(Community community)
+        {
+            return community != null && ReferenceEquals(community, Community.PlayerCommunity);
+        }
+
+        internal static bool IsPlayerEngine(Engine engine)
+        {
+            return engine != null && engine.Buildable != null && IsPlayer(engine.Buildable.Community);
+        }
+
+        internal static bool SuppressRest(Vital vital)
+        {
+            Plugin self = Instance;
+            return self != null && self.RestReady && self.NoRest.Value && vital != null &&
+                vital.VitalType == VitalType.Rest && vital.Agent != null &&
+                vital.Agent.IsAlive && IsPlayer(vital.Agent.Community);
+        }
+
+        private void ResetShipSettings()
+        {
+            ShipSpeed.Value = ShipTurning.Value = ShipAcceleration.Value = ShipBraking.Value = 1f;
+            FreeTravel.Value = false;
+            ShipPhysics.RestoreAll();
         }
 
         private void Update()
@@ -86,6 +163,7 @@ namespace Puchatek.FlotsamPlus
             Community current = Community.PlayerCommunity;
             if (!ReferenceEquals(current, _community))
             {
+                ShipPhysics.RestoreAll();
                 if (_batch != null && !_batch.Finished)
                     _batch.Cancel("Zmieniono osadę lub zamknięto zapis.");
                 _community = current;
@@ -93,7 +171,7 @@ namespace Puchatek.FlotsamPlus
                 _filtered.Clear();
                 _selected = null;
                 _nextRefresh = 0;
-                if (current != null && _patchesReady) ApplyNeedsNow();
+                if (current != null) ApplyNeedsNow();
             }
             if (_open && current != null && Time.unscaledTime >= _nextRefresh)
             {
@@ -266,8 +344,8 @@ namespace Puchatek.FlotsamPlus
                 foreach (Agent agent in _community.Agents)
                 {
                     if (agent == null || !agent.IsAlive || agent.Vitals == null) continue;
-                    if (NoHunger.Value) Satisfy(agent.Vitals.Hunger, true);
-                    if (NoThirst.Value) Satisfy(agent.Vitals.Thirst, true);
+                    if (_patchesReady && NoHunger.Value) Satisfy(agent.Vitals.Hunger, true);
+                    if (_patchesReady && NoThirst.Value) Satisfy(agent.Vitals.Thirst, true);
                 }
             }
             catch (Exception error) { ReportError("Nie udało się odświeżyć potrzeb.", error); }
@@ -289,8 +367,8 @@ namespace Puchatek.FlotsamPlus
                 _smallStyle = new GUIStyle(GUI.skin.label) { fontSize = 12, wordWrap = true };
                 _messageStyle = new GUIStyle(GUI.skin.box) { wordWrap = true, alignment = TextAnchor.MiddleLeft };
             }
-            _window.width = Mathf.Min(590, Mathf.Max(320, Screen.width - 20));
-            _window.height = Mathf.Min(650, Mathf.Max(310, Screen.height - 30));
+            _window.width = Mathf.Min(690, Mathf.Max(320, Screen.width - 20));
+            _window.height = Mathf.Min(690, Mathf.Max(310, Screen.height - 30));
             _window.x = Mathf.Clamp(_window.x, 0, Mathf.Max(0, Screen.width - _window.width));
             _window.y = Mathf.Clamp(_window.y, 0, Mathf.Max(0, Screen.height - _window.height));
             bool oldEnabled = GUI.enabled;
@@ -299,10 +377,11 @@ namespace Puchatek.FlotsamPlus
             {
                 GUI.enabled = true;
                 GUI.color = Color.white;
-                _window = GUI.Window(7408162, _window, DrawWindow, "Flotsam: surowce i potrzeby");
+                _window = GUI.Window(7408162, _window, DrawWindow, "Flotsam Plus 1.1.0");
             }
             finally { GUI.enabled = oldEnabled; GUI.color = oldColor; }
         }
+
 
         private void DrawWindow(int id)
         {
@@ -310,21 +389,109 @@ namespace Puchatek.FlotsamPlus
             GUILayout.Label("Menu: " + _menuKey.Value + "  |  Poprzedni trainer: F9", _smallStyle);
             if (GUILayout.Button("Zamknij", GUILayout.Width(78))) _open = false;
             GUILayout.EndHorizontal();
-            GUILayout.Space(5);
-            GUILayout.Label("Potrzeby mieszkańców", _headerStyle);
-            GUI.enabled = _patchesReady;
-            bool noHunger = GUILayout.Toggle(NoHunger.Value, " Wyłącz głód");
-            bool noThirst = GUILayout.Toggle(NoThirst.Value, " Wyłącz pragnienie");
-            if (noHunger != NoHunger.Value || noThirst != NoThirst.Value)
+            int nextTab = GUILayout.Toolbar(_tab, Tabs, GUILayout.Height(30));
+            if (nextTab != _tab) { _tab = nextTab; _settingsScroll = Vector2.zero; }
+            GUILayout.Space(8);
+            if (_tab == 3) DrawResources();
+            else
             {
-                NoHunger.Value = noHunger;
-                NoThirst.Value = noThirst;
-                ApplyNeedsNow();
+                _settingsScroll = GUILayout.BeginScrollView(_settingsScroll, GUILayout.ExpandHeight(true));
+                if (_tab == 0) DrawShip();
+                else if (_tab == 1) DrawResidents();
+                else DrawBuildingAndResearch();
+                GUILayout.EndScrollView();
             }
             GUI.enabled = true;
-            GUILayout.Label(_patchesReady
-                ? "Włączone opcje od razu zaspokajają potrzebę i zatrzymują jej narastanie."
-                : "Obsługa potrzeb nie uruchomiła się. Sprawdź LogOutput.log.", _smallStyle);
+            GUI.DragWindow(new Rect(0, 0, 5000, 20));
+        }
+
+        private void DrawShip()
+        {
+            GUILayout.Label("Statek i podróż", _headerStyle);
+            DrawMultiplier(ShipSpeed, "Prędkość podróży", 5f, ShipReady);
+            DrawMultiplier(ShipTurning, "Zwrotność / szybkość skrętu", 5f, ShipReady);
+            DrawMultiplier(ShipAcceleration, "Przyspieszenie", 5f, PhysicsReady);
+            DrawMultiplier(ShipBraking, "Hamowanie / mniejsza bezwładność", 5f, PhysicsReady);
+            DrawToggle(FreeTravel, " Podróż bez zużywania energii", EnergyReady);
+            GUILayout.Space(8);
+            GUILayout.Label("Prędkość i skręt są niezależne. Hamowanie ogranicza dryf po puszczeniu sterowania.",
+                _smallStyle);
+            if (GUILayout.Button("Przywróć normalne ustawienia statku", GUILayout.Height(30)))
+                ResetShipSettings();
+            DrawAvailability(ShipReady && PhysicsReady && EnergyReady);
+        }
+
+        private void DrawResidents()
+        {
+            GUILayout.Label("Potrzeby mieszkańców", _headerStyle);
+            bool changed = DrawToggle(NoHunger, " Wyłącz głód", _patchesReady);
+            changed |= DrawToggle(NoThirst, " Wyłącz pragnienie", _patchesReady);
+            changed |= DrawToggle(NoRest, " Wyłącz nocny sen / odpoczynek", RestReady);
+            if (changed) ApplyNeedsNow();
+            GUILayout.Space(8);
+            GUILayout.Label("Opcje dotyczą mieszkańców Twojej osady. Nie rozpoczynają nocnego snu. Rozpoczęty wcześniej odpoczynek kończy się normalnie.",
+                _smallStyle);
+            DrawAvailability(_patchesReady && RestReady);
+        }
+
+        private void DrawBuildingAndResearch()
+        {
+            GUILayout.Label("Budowa", _headerStyle);
+            DrawToggle(InstantBuild, " Natychmiastowa budowa i ulepszenia bez surowców", BuildingReady);
+            GUILayout.Label("Dotyczy nowych budynków, dekoracji, łodzi i rozpoczynanych ulepszeń. " +
+                "Już istniejące place budowy kończą pracę normalnie.", _smallStyle);
+            GUILayout.Space(12);
+            GUILayout.Label("Badania", _headerStyle);
+            DrawMultiplier(ResearchSpeed, "Szybkość badań", 100f, ResearchReady);
+            GUILayout.Label("Przyspiesza pracę naukowców. Nadal potrzebne są punkty badań i aktywna stacja.",
+                _smallStyle);
+            DrawAvailability(BuildingReady && ResearchReady);
+            GUILayout.Space(16);
+            if (GUILayout.Button("Wyłącz wszystkie ułatwienia i przywróć mnożniki ×1", GUILayout.Height(30)))
+            {
+                ResetShipSettings();
+                NoHunger.Value = NoThirst.Value = NoRest.Value = InstantBuild.Value = false;
+                ResearchSpeed.Value = 1f;
+            }
+            GUILayout.Label("Reset ustawień nie cofa już dodanych surowców, ukończonych budynków ani badań.",
+                _smallStyle);
+        }
+
+        private bool DrawToggle(ConfigEntry<bool> setting, string label, bool ready)
+        {
+            GUI.enabled = ready;
+            bool value = GUILayout.Toggle(setting.Value, label);
+            GUI.enabled = true;
+            if (!ready || value == setting.Value) return false;
+            setting.Value = value;
+            return true;
+        }
+
+        private void DrawMultiplier(ConfigEntry<float> setting, string label, float maximum, bool ready)
+        {
+            float current = Tuning.Multiplier(setting.Value, maximum);
+            GUILayout.Space(5);
+            GUILayout.Label(label + ": ×" + current.ToString("0.0", CultureInfo.CurrentCulture), _smallStyle);
+            GUI.enabled = ready;
+            float value = GUILayout.HorizontalSlider(current, 1f, maximum);
+            value = Mathf.Round(value * 10f) / 10f;
+            GUILayout.BeginHorizontal();
+            int[] presets = maximum > 5f ? new[] { 1, 5, 10, 50, 100 } : new[] { 1, 2, 3, 5 };
+            foreach (int preset in presets)
+                if (GUILayout.Button("×" + preset, GUILayout.Width(52))) value = preset;
+            GUILayout.EndHorizontal();
+            GUI.enabled = true;
+            if (ready && value != setting.Value) setting.Value = value;
+        }
+
+        private void DrawAvailability(bool ready)
+        {
+            if (!ready)
+                GUILayout.Label("Część opcji nie uruchomiła się. Szczegóły w BepInEx/LogOutput.log.", _smallStyle);
+        }
+
+        private void DrawResources()
+        {
             GUILayout.Space(8);
             GUILayout.BeginHorizontal();
             GUILayout.Label("Dodawanie surowców", _headerStyle);
@@ -336,7 +503,6 @@ namespace Puchatek.FlotsamPlus
             {
                 GUILayout.Box("Wczytaj zapis lub rozpocznij grę, aby dodać surowce.", _messageStyle,
                     GUILayout.ExpandHeight(true));
-                GUI.DragWindow(new Rect(0, 0, 5000, 20));
                 return;
             }
             GUILayout.BeginHorizontal();
@@ -381,11 +547,11 @@ namespace Puchatek.FlotsamPlus
                 UpdateBatchMessage();
             }
             GUILayout.Label("Limit jednej operacji: 5000. Surowce trafiają do pasujących magazynów z wolnym miejscem.", _smallStyle);
-            GUI.DragWindow(new Rect(0, 0, 5000, 20));
         }
 
         private void OnDestroy()
         {
+            ShipPhysics.RestoreAll();
             if (_batch != null) _batch.Cancel("Dodatek wyłączony.");
             if (_harmony != null) _harmony.UnpatchSelf();
             if (ReferenceEquals(Instance, this)) Instance = null;
