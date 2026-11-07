@@ -83,8 +83,6 @@ CI pakuje dołączoną DLL; pełna kompilacja pluginu odbywa się lokalnie z
 bibliotekami gry. Po wypchnięciu tagu, np. `v1.0.0`, drugi etap workflow
 publikuje GitHub Release z ZIP-em i sumami SHA-256.
 
-Instrukcja pierwszego wysłania: [GITHUB_START_PL.md](GITHUB_START_PL.md).
-
 ## Licencja i zależności
 
 Kod tego projektu: [MIT](LICENSE). Flotsam, BepInEx, Unity, Harmony oraz
