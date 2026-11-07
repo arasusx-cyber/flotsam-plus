@@ -9,7 +9,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DLL_NAME = "FlotsamPuchatekPlus.dll"
-SOURCE_FILES = ("src/FlotsamPlus.csproj", "src/Plugin.cs", "src/SpawnBatch.cs")
+SOURCE_FILES = ("src/FlotsamPlus.csproj",) + tuple(
+    "src/" + path.name for path in sorted((ROOT / "src").glob("*.cs"))
+)
 
 
 def sha256(path):
