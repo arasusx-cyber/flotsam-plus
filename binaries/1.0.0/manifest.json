@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "binary": "FlotsamPuchatekPlus.dll",
+  "binary_sha256": "96cdecfcc97d72511806d5062ec2a4cacb919805ff7e8ef4589639bf50e5e5bf",
+  "source_sha256": {
+    "src/FlotsamPlus.csproj": "a0c6616f43e2a22d7d757f919ae543e40f04e68a446c315dacf9eebc954d4153",
+    "src/Plugin.cs": "a92fe73f64cce9392bac2543f2a8c301c57188d96ffeb938f59330e02fdef32b",
+    "src/SpawnBatch.cs": "a5e957348a7027e15906b9a663fd648390b0db2fd26c4fb684ba01dcb8085e2f"
+  },
+  "build_info": {
+    "method": "Original 1.0.0 build preserved without binary changes",
+    "target_framework": "netstandard2.1",
+    "bepinex": "5.4.21",
+    "game_assembly_sha256": "5b5c9f730ed71d5f66c0267064fc57667d2ff5644a018e9189b140ce025c1cd8",
+    "queue_tests": "8 checks passed during original build",
+    "gameplay_test": "User reported this exact DLL working on 2026-11-07; other game builds unverified"
+  }
+}
