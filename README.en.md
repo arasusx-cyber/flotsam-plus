@@ -1,41 +1,40 @@
 # Flotsam Plus
 
-Spawn resources and disable hunger or thirst for your town. Open the Polish-language menu with **F8**. Item names follow the game's language.
+A Polish **F8** menu for ship handling, needs, construction, research and resources.
 
-**[⬇ Download Flotsam Plus 1.0.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.0.0.zip)** · [Polski](README.md)
+**[⬇ Download Flotsam Plus 1.1.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.1.0.zip)** · [Polski](README.md)
 
-Windows x64 · BepInEx 5.4.x · Mod version 1.0.0
+Windows x64 · BepInEx 5.4.x · Version 1.1.0
 
-![Flotsam Plus menu](docs/images/menu.png)
+| Tab | Features |
+|---|---|
+| Ship | Independent travel speed, turning, acceleration and braking multipliers ×1–×5; energy-free travel |
+| Residents | Independent hunger, thirst and nighttime sleep switches |
+| Construction and research | Instant new construction/upgrades without materials; research speed ×1–×100 |
+| Resources | Search items and insert 1–5000 into compatible storage with available capacity |
 
-## Features
+Ship reset restores vanilla multipliers and travel energy use. A separate reset disables all conveniences. Existing hunger/thirst settings are preserved; new switches start disabled and multipliers at ×1.
 
-| Option | Effect |
-| --- | --- |
-| Disable hunger | Clears current hunger and prevents it from increasing. |
-| Disable thirst | Clears current thirst and prevents it from increasing. |
-| Spawn resources | Search for an item and add 1–5000 units. |
+Speed and turning cover manual movement and route travel. Acceleration changes force-based movement; direct movement modes have no acceleration phase. Braking reduces coasting after releasing movement controls.
 
-Resources go to compatible, completed storages with available capacity. The menu reports the actual number added and supports cancellation. Hunger and thirst settings are saved.
+Research still requires points and a station. Sleep already in progress finishes normally. Existing construction jobs are not forcibly completed.
 
-## Installation
+## Update / install
 
-1. Install [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21), run the game once, then close it. Skip this step if BepInEx 5.4.x is already installed.
-2. Extract the **BepInEx** folder from the [mod ZIP](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.0.0.zip) next to **Flotsam.exe**.
-3. Load a save and press **F8**.
-
-Plugin location:
+Close the game and extract `BepInEx` beside `Flotsam.exe`, replacing:
 
 ```text
 BepInEx/plugins/FlotsamPuchatekPlus/FlotsamPuchatekPlus.dll
 ```
 
-Both need switches are off by default. Water requires liquid storage. A consumption job already in progress can still finish after its need is disabled. Back up your save before use: spawned items persist when the game is saved.
+Load a save and press **F8**. Do not keep duplicate copies of this plugin. First-time setup needs [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21). The older Hansjoy trainer can remain on F9.
 
-The original Hansjoy trainer can remain installed with its own **F9** menu.
+## Validation
 
-## Documentation
+Version 1.1.0 builds with zero errors/warnings and passes 21 resource/tuning/reset checks plus 43 game API/IL checks against the supplied game assembly. **The new version has not yet been tested in a running game.**
 
-[Detailed installation (Polish)](docs/INSTALL_PL.md) · [Build and development (Polish)](docs/DEVELOPMENT.md) · [Changelog](CHANGELOG.md)
+The previous [1.0.0 package](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.0.0.zip) remains available.
 
-Code: [MIT](LICENSE). Dependencies and credits: [NOTICE.md](NOTICE.md).
+[Installation details (PL)](docs/INSTALL_PL.md) · [Development (PL)](docs/DEVELOPMENT.md) · [Changelog](CHANGELOG.md)
+
+[MIT license](LICENSE) · [Credits](NOTICE.md)

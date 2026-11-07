@@ -1,0 +1,22 @@
+{
+  "version": "1.1.0",
+  "binary": "FlotsamPuchatekPlus.dll",
+  "binary_sha256": "336bfeb1718f8f0da1269b1e7993ed0434ec7fabfd20aa49ca710275ce384966",
+  "source_sha256": {
+    "src/FlotsamPlus.csproj": "848f8fa8db766705866e796c67ab1992e244154ae2d9d27a28439d1558c0d647",
+    "src/GameplayPatches.cs": "fdd367863f85da0517c0e0d463ff818399321705ea4d18ff39cc5ae9c28a0c19",
+    "src/Plugin.cs": "edf7361c5bb6eef435f902339ebff70dd1bab1eff9034e27eebe17d86e641b23",
+    "src/ShipPhysics.cs": "e9ec036f689fc504955e80cc907f4a588bf98af772fcecd8e2a1fc91b3bf2e2c",
+    "src/SpawnBatch.cs": "a5e957348a7027e15906b9a663fd648390b0db2fd26c4fb684ba01dcb8085e2f",
+    "src/Tuning.cs": "19be74e9c89e2fe6ace72454a96c0e495db4f6800864570132ce3c90bcf5cdd2"
+  },
+  "build_info": {
+    "method": "Local build using scripts/build.py",
+    "game_assembly_sha256": "5b5c9f730ed71d5f66c0267064fc57667d2ff5644a018e9189b140ce025c1cd8",
+    "target_framework": "netstandard2.1",
+    "queue_and_tuning_checks": 21,
+    "game_api_checks": "Passed against the supplied game assembly; not a gameplay test.",
+    "unity_reference_api": "UnityEngine.Modules 2021.3.33; runtime damping names support Unity 6.",
+    "gameplay_test": "Not performed by this script; test the new DLL in the game."
+  }
+}

@@ -16,10 +16,12 @@ def main():
     game = args.game_dir.expanduser().resolve()
     managed = game / "Flotsam_Data" / "Managed"
     core = game / "BepInEx" / "core"
-    required = [managed / "Assembly-CSharp.dll", core / "BepInEx.dll", core / "0Harmony.dll"]
+    required = [managed / "Assembly-CSharp.dll", core / "BepInEx.dll", core / "0Harmony.dll",
+                core / "Mono.Cecil.dll"]
     required += [managed / name for name in [
         "UnityEngine.dll", "UnityEngine.CoreModule.dll", "UnityEngine.IMGUIModule.dll",
-        "UnityEngine.InputLegacyModule.dll", "UnityEngine.TextRenderingModule.dll"
+        "UnityEngine.InputLegacyModule.dll", "UnityEngine.TextRenderingModule.dll",
+        "UnityEngine.Physics2DModule.dll"
     ]]
     missing = [str(path) for path in required if not path.is_file()]
     if missing:
@@ -31,6 +33,9 @@ def main():
         subprocess.run([args.dotnet, "build", str(ROOT / "src/FlotsamPlus.csproj"), "-c", "Release",
                         "-p:GameDir=" + str(game)], cwd=ROOT, check=True)
         built = ROOT / "src/bin/Release/netstandard2.1" / DLL_NAME
+        subprocess.run([args.dotnet, "run", "--project", str(ROOT / "tests/GameApiChecks.csproj"),
+                        "-c", "Release", "-p:GameDir=" + str(game), "--",
+                        str(managed / "Assembly-CSharp.dll"), str(built)], cwd=ROOT, check=True)
         directory = binary_directory()
         directory.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(built, directory / DLL_NAME)
@@ -38,6 +43,9 @@ def main():
             "method": "Local build using scripts/build.py",
             "game_assembly_sha256": sha256(managed / "Assembly-CSharp.dll"),
             "target_framework": "netstandard2.1",
+            "queue_and_tuning_checks": 21,
+            "game_api_checks": "Passed against the supplied game assembly; not a gameplay test.",
+            "unity_reference_api": "UnityEngine.Modules 2021.3.33; runtime damping names support Unity 6.",
             "gameplay_test": "Not performed by this script; test the new DLL in the game.",
         })
         for path in package_release():

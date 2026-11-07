@@ -9,7 +9,8 @@ def main():
         manifest = verify_manifest()
         for name in ["README.md", "README.en.md", "LICENSE", "NOTICE.md", "CHANGELOG.md",
                      "docs/INSTALL_PL.md", "tests/SpawnBatchTests.csproj", "tests/Program.cs",
-                     ".github/workflows/ci.yml"]:
+                     ".github/workflows/ci.yml", "tests/TuningChecks.cs",
+                     "tests/GameApiChecks.cs", "tests/GameApiChecks.csproj", "tests/Directory.Build.props"]:
             if not (ROOT / name).is_file():
                 raise ValueError("Missing repository file: " + name)
         for path in ROOT.rglob("*.dll"):
