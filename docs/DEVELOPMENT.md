@@ -1,31 +1,35 @@
-# Kompilacja i wydania
+# Kompilacja i rozwój
 
-## Pełna kompilacja pluginu
+## Wymagania
 
-Zainstaluj .NET SDK 8, Python 3.9+ oraz BepInEx we własnej instalacji gry.
-Ze źródłowego katalogu repozytorium uruchom:
+- .NET SDK 8 i Python 3.9+.
+- Własna instalacja Flotsam na Windows z BepInEx 5.4.x x64.
+- Biblioteki referencyjne z `Flotsam_Data/Managed` oraz `BepInEx/core`.
+
+## Kompilacja
+
+Z katalogu repozytorium uruchom:
 
 ```powershell
 python scripts/build.py --game-dir "D:/Steam/steamapps/common/Flotsam"
 ```
 
-Skrypt sprawdza wymagane biblioteki, uruchamia osiem testów kolejki,
-buduje plugin i zapisuje nową DLL oraz manifest w `binaries/<wersja>`.
-Następnie tworzy ZIP w `dist`. Wybrany SDK można wskazać przez `--dotnet`.
+Skrypt sprawdza zależności, uruchamia testy, buduje plugin i aktualizuje DLL
+oraz manifest w `binaries/<wersja>`. Gotowy ZIP powstaje w `dist`.
+Parametr `--dotnet` pozwala wskazać konkretny plik wykonywalny SDK.
 
-Bezpośrednia kompilacja z osobnymi katalogami referencji:
+Bezpośrednia kompilacja:
 
 ```powershell
-dotnet build src/FlotsamPlus.csproj -c Release `
-  '-p:GameManagedDir=D:/Games/Flotsam/Flotsam_Data/Managed' `
-  '-p:UnityManagedDir=D:/Games/Flotsam/Flotsam_Data/Managed' `
-  '-p:BepInExCoreDir=D:/Games/Flotsam/BepInEx/core'
+dotnet build src/FlotsamPlus.csproj -c Release '-p:GameDir=D:/Steam/steamapps/common/Flotsam'
 ```
 
-Zależności projektu mają `Private=false`. Plugin używa bibliotek dostarczonych
-z grą i BepInEx; skrypt pakowania dodaje wyłącznie DLL tego projektu.
+Osobne lokalizacje referencji można podać przez właściwości MSBuild
+`GameManagedDir`, `UnityManagedDir` i `BepInExCoreDir`.
+Wynik: `src/bin/Release/netstandard2.1/FlotsamPuchatekPlus.dll`.
+Zależności mają `Private=false`; nie są kopiowane do paczki pluginu.
 
-## Testy i manifest
+## Testy i pakowanie
 
 ```shell
 dotnet run --project tests/SpawnBatchTests.csproj -c Release
@@ -33,55 +37,40 @@ python scripts/verify_repo.py
 python scripts/package_release.py
 ```
 
-Testy obejmują limit operacji na klatkę, pełną i częściową operację, brak
-magazynu, anulowanie, wyjątek przy wstawieniu oraz ograniczenia ilości.
-Wykonują rzeczywistą klasę `SpawnBatch` ze źródeł pluginu.
+Osiem testów kolejki obejmuje limit operacji na klatkę, pełne i częściowe
+dodawanie, brak miejsca, anulowanie, błąd wstawienia oraz ograniczenia ilości.
+Testy używają klasy `SpawnBatch` z pluginu. Interfejs i działanie Harmony
+wymagają osobnej próby w uruchomionej grze.
 
-Manifest zawiera sumę SHA-256 DLL oraz trzech plików źródłowych projektu.
-Pakowanie odrzuca binarkę z inną sumą lub nieaktualnymi źródłami.
-Po zmianie pluginu uruchom ponownie `build.py`; sama zmiana manifestu nie
-zastępuje kompilacji. Testy kolejki nie sprawdzają interfejsu ani działania
-Harmony w uruchomionej grze.
+Manifest zapisuje SHA-256 DLL i plików źródłowych pluginu. Po zmianie kodu
+uruchom ponownie `build.py`, aby zaktualizować binarkę i manifest.
+Pakowanie zatrzyma się, jeśli źródła lub DLL nie pasują do manifestu.
 
-## Co robi CI
+## GitHub Actions
 
-Dołączony GitHub Actions workflow:
+Workflow sprawdza manifest, uruchamia testy i pakuje dołączoną DLL.
+Gotowy ZIP udostępnia jako artefakt. Pełna kompilacja pluginu odbywa się
+lokalnie z bibliotekami gry.
 
-1. Weryfikuje manifest i pliki repozytorium.
-2. Uruchamia osiem testów kolejki na .NET 8.
-3. Tworzy powtarzalny ZIP z dołączonej DLL i instrukcją.
-4. Udostępnia ZIP jako artefakt workflow.
-5. Przy tagu `v<wersja>` publikuje GitHub Release z ZIP-em i SHA-256.
+Wypchnięcie tagu odpowiadającego wersji projektu, np. `v1.0.0`, uruchamia
+publikację wydania z ZIP-em i sumą SHA-256. Zwykły commit nie publikuje wydania.
 
-Pełna kompilacja wymaga lokalnej instalacji gry. CI korzysta z gotowej DLL
-w `binaries`, której zgodność ze źródłami opisuje manifest.
-
-## Następna wersja
+## Kolejna wersja
 
 1. Zmień wersję w `src/FlotsamPlus.csproj` i atrybucie `BepInPlugin`.
-2. Zaktualizuj README, CHANGELOG, instrukcję i `.github/RELEASE_NOTES.md`.
-3. Uruchom `python scripts/build.py --game-dir "..."`.
-4. Sprawdź plugin w grze, potem zatwierdź kod, nową binarkę i manifest.
-5. Wyślij commit oraz odpowiadający mu tag, np. `v1.0.1`.
+2. Zaktualizuj README, CHANGELOG i `.github/RELEASE_NOTES.md`.
+3. Uruchom `build.py` i sprawdź nową DLL w grze.
+4. Zatwierdź źródła, binarkę, manifest oraz paczkę w `dist`.
+5. Wyślij commit i odpowiadający mu tag wersji.
 
-## Pierwotna wersja 1.0.0
+## Zgodność wersji 1.0.0
 
-Pierwotną DLL zbudowano z BepInEx 5.4.21, `netstandard2.1`, dostarczoną
-biblioteką gry i referencjami wspólnych API Unity 2021.3.33.
-SHA-256 biblioteki gry użytej do tej kompilacji:
-
-```text
-5b5c9f730ed71d5f66c0267064fc57667d2ff5644a018e9189b140ce025c1cd8
-```
-
-Kompilacja przeszła bez błędów i ostrzeżeń. Użytkownik potwierdził działanie
-tej DLL w swojej grze 2026-11-07. Nie jest to sprawdzenie wszystkich wersji gry.
+Pierwotną DLL zbudowano dla `netstandard2.1` z BepInEx 5.4.21 i referencjami
+wspólnych API Unity 2021.3.33. Kompilacja zakończyła się bez błędów i ostrzeżeń;
+wykonano osiem testów kolejki oraz próbę działania w jednej instalacji gry.
+Inne wersje Flotsam wymagają osobnego sprawdzenia.
 
 ## Materiały
 
-- https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/2_plugin_start.html
-- https://harmony.pardeike.net/articles/patching-prefix.html
-- https://github.com/actions/checkout
-- https://github.com/actions/setup-dotnet
-- https://github.com/actions/upload-artifact
-- https://cli.github.com/manual/gh_release_create
+- [BepInEx: tworzenie pluginów](https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/2_plugin_start.html)
+- [Harmony: prefix patches](https://harmony.pardeike.net/articles/patching-prefix.html)
