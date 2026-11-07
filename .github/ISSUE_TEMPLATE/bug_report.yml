@@ -1,0 +1,30 @@
+name: Bug report / Zgłoszenie błędu
+description: Report a problem with Flotsam Plus.
+title: "[Bug] "
+body:
+  - type: input
+    id: game-version
+    attributes:
+      label: Flotsam version / Wersja gry
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Flotsam Plus version / Wersja dodatku
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened? / Co się stało?
+      description: Include steps to reproduce and the expected result.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Relevant LogOutput.log entries / Fragment logu
+      description: Paste entries related to Flotsam Plus or its error.
+      render: text
