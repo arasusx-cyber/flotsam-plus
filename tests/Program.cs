@@ -57,6 +57,7 @@ internal static class Program
         var maximum = new SpawnBatch(5000);
         while (!maximum.Finished) maximum.Step(() => true, 24);
         Check(maximum.Added == 5000, "Maximum batch completes exactly");
+        TuningChecks.Run(Check);
         Console.WriteLine("Passed " + _checks + " checks.");
     }
 }

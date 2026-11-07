@@ -4,8 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="TuningChecks.cs" />
     <Compile Include="../src/SpawnBatch.cs" Link="SpawnBatch.cs" />
+    <Compile Include="../src/Tuning.cs" Link="Tuning.cs" />
   </ItemGroup>
 </Project>
