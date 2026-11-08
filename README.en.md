@@ -6,6 +6,8 @@ A Polish **F8** menu for ship handling, residents, skill points, map discovery, 
 
 Windows x64 · BepInEx 5.4.x · Version 1.2.0
 
+**Version 1.2.0 was confirmed working in-game by the user on 8 November 2026.**
+
 | Tab | Features |
 |---|---|
 | Ship | Independent travel speed, turning, acceleration and braking multipliers ×1–×5; energy-free travel |
@@ -36,9 +38,15 @@ BepInEx/plugins/FlotsamPuchatekPlus/FlotsamPuchatekPlus.dll
 
 Load a save and press **F8**. Do not keep duplicate copies of this plugin. First-time setup needs [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21). The older Hansjoy trainer can remain on F9.
 
+## In-game screenshot
+
+![Flotsam Plus 1.2.0 in-game menu](docs/images/menu-1.2.0.png)
+
+*Flotsam Plus 1.2.0 F8 menu, supplied by the user after confirming the mod working in-game.*
+
 ## Validation
 
-Version 1.2.0 builds with zero errors/warnings and passes 27 resource/tuning/skill-point checks plus 68 game API/IL checks against the supplied game assembly. **The new version has not yet been tested in a running game.**
+Version 1.2.0 builds with zero errors/warnings and passes 27 resource/tuning/skill-point checks plus 68 game API/IL checks against the supplied game assembly. **The user confirmed version 1.2.0 working in a running game on 8 November 2026.**
 
 The previous [1.1.0 package](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.1.0.zip) was confirmed working in-game by the user on 8 November 2026. The [1.0.0 package](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.0.0.zip) remains available.
 
