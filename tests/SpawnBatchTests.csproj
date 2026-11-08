@@ -11,6 +11,8 @@
     <Compile Include="TuningChecks.cs" />
     <Compile Include="PointGrantChecks.cs" />
     <Compile Include="LocalizationCapacityChecks.cs" />
+    <Compile Include="WindowChecks.cs" />
+    <Compile Include="../src/WindowLayout.cs" Link="WindowLayout.cs" />
     <Compile Include="../src/Localization.cs" Link="Localization.cs" />
     <Compile Include="../src/WeightCapacity.cs" Link="WeightCapacity.cs" />
     <Compile Include="../src/PointGrant.cs" Link="PointGrant.cs" />

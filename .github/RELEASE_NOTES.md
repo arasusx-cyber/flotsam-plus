@@ -1,16 +1,20 @@
-# Flotsam Plus 1.3.0
+# Flotsam Plus 1.4.0
 
-- **PL / EN:** zmiana języka menu bez restartu; wybór jest zapamiętywany.
-- **Udźwig osady ×1–×100** i **wyłączenie limitu wagi**, aby dalej rozbudowywać osadę.
-- Zachowane wszystkie funkcje 1.2.0, dotychczasowa konfiguracja i normalne pojemności magazynów.
-- Instrukcja instalacji w paczce po polsku i angielsku.
+**F8 → Okno / Window**:
 
-**F8 → Statek**: ustaw udźwig lub zaznacz wyłączenie limitu. Język zmienisz u góry menu. Zamknij grę i nadpisz dotychczasową DLL, wypakowując `BepInEx` obok `Flotsam.exe`.
+- Kolor tła: pięć gotowych palet i własne RGB.
+- Przezroczystość samego tła 0–100%, z nieprzygaszonym tekstem i kontrolkami.
+- Suwaki szerokości/wysokości, gotowe rozmiary, dopasowanie do ekranu i przeciąganie prawego dolnego rogu.
+- Tekst 12–20 px, kontrast dopasowany do koloru tła, przewijanie każdej zakładki i układ dla wąskich okien.
+- Zapamiętane położenie i wygląd. **Ctrl+F8** przywraca czytelne okno bez zmiany ułatwień ani języka.
+- Przewijanie nad menu blokuje jednoczesny zoom gry.
 
-43 testy logiki i 82 kontrole API/IL; kompilacja bez błędów i ostrzeżeń. Nowe opcje 1.3.0 wymagają potwierdzenia w uruchomionej grze. Poprzednia 1.2.0 została potwierdzona przez użytkownika.
+Zachowane wszystkie funkcje 1.3.0, konfiguracja i poprzednie paczki. Zamknij grę i nadpisz dotychczasową DLL folderem BepInEx z ZIP-a.
+
+58 testów logiki i 92 kontrole API/IL; kompilacja bez błędów i ostrzeżeń. Wygląd oraz obsługa w uruchomionej grze wymagają potwierdzenia.
 
 ---
 
-Live **PL/EN** menu switching, **town capacity ×1–×100**, and a **disable weight limit** switch. Open **F8 → Ship**; choose **EN** at the top. Replace the existing DLL with the ZIP's `BepInEx` folder. All earlier features remain available.
+**F8 → Window** adds background presets/RGB, 0–100% background transparency, size sliders/presets, a resize grip, 12–20 px text and a responsive scrolling layout. Appearance and position are saved. **Ctrl+F8** restores a readable default without changing gameplay options or language.
 
-43 logic and 82 game API/IL checks pass. New 1.3.0 gameplay awaits confirmation; 1.2.0 was confirmed working by the user.
+58 logic checks and 92 game API/IL checks pass. Rendering/in-game operation still awaits confirmation.

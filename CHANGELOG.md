@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4.0 — 2026-11-08
+
+- New Window tab with five background presets, custom RGB and 0–100% background transparency.
+- Private, reusable GUI skin with opaque controls and automatic light/dark text.
+- Adjustable width/height, size presets, bottom-right resizing, and saved position.
+- Larger default window and 12–20 px text sizing.
+- Responsive button grids and clipped, scrollable content on every tab.
+- Ctrl+F8 emergency appearance reset, independent of gameplay options and language.
+- Mouse/keyboard capture during resize and text editing; scrolling over the menu suppresses game zoom.
+- Debounced window-preference saving and owned-skin/texture cleanup on unload.
+- 58 logic checks and 92 game API/IL checks. Visual/in-game confirmation remains pending.
+
 ## 1.3.0 — 2026-11-08
 
 - Live PL/EN menu selector with a saved language preference.

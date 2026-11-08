@@ -1,4 +1,4 @@
-# Instalacja Flotsam Plus 1.3.0
+# Instalacja Flotsam Plus 1.4.0
 
 ## Instalacja i aktualizacja
 
@@ -12,7 +12,7 @@ BepInEx/plugins/FlotsamPuchatekPlus/FlotsamPuchatekPlus.dll
 
 4. Wczytaj zapis i naciśnij **F8**.
 
-Nie zostawiaj dodatkowej kopii DLL pluginu w innym folderze BepInEx. Konfiguracja z 1.0.0, 1.1.0 i 1.2.0 nadal jest używana. Nowe opcje początkowo są wyłączone lub ustawione na ×1.
+Nie zostawiaj dodatkowej kopii DLL pluginu w innym folderze BepInEx. Konfiguracja z 1.0.0, 1.1.0, 1.2.0 i 1.3.0 nadal jest używana. Nowe opcje początkowo są wyłączone lub ustawione na ×1.
 
 Pierwsza instalacja wymaga Flotsam na Windows z `Flotsam_Data/Managed` i BepInEx 5.4.x x64. Jeśli go nie masz, zainstaluj [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21), uruchom grę raz i zamknij ją. Paczka pluginu nie zawiera loadera ani bibliotek gry.
 
@@ -21,6 +21,20 @@ Pierwsza instalacja wymaga Flotsam na Windows z `Flotsam_Data/Managed` i BepInEx
 W górnej części menu F8 wybierz **PL** lub **EN**. Zmiana jest natychmiastowa i zapamiętywana w istniejącym pliku konfiguracji: sekcja `[Menu]`, `Jezyk = Polski` lub `Jezyk = English`. Domyślnie pozostaje polski. Reset ułatwień nie zmienia języka.
 
 Język obejmuje przyciski, zakładki, opisy i komunikaty, także wynik wcześniej wykonanej operacji. Nazwy surowców, kategorii i mieszkańców pochodzą z gry; język moda nie zmienia ustawienia języka samego Flotsam.
+
+## Okno: kolor, prześwit i wielkość
+
+Otwórz **F8 → Okno** albo kliknij „Okno” obok wyboru języka.
+
+- **Przezroczystość tła:** 0% oznacza pełne tło, 100% całkowicie przezroczyste. Dostępne są suwak i gotowe wartości. Tekst i przyciski nie są przygaszane razem z tłem.
+- **Kolor tła:** wybierz grafit, granat, zieleń, bordo lub jasne tło. Niżej ustawisz własny kolor suwakami RGB. Tekst automatycznie staje się jasny lub ciemny.
+- **Rozmiar:** wybierz małe, standardowe lub duże okno albo dopasuj je do ekranu. Szerokość i wysokość mają osobne suwaki. Możesz też przeciągnąć znacznik w prawym dolnym rogu.
+- **Przesuwanie:** przeciągaj pasek tytułu. Wielkość i położenie są ograniczane do aktualnego ekranu. Po zmianie rozdzielczości okno pozostaje w zasięgu; zapamiętany większy rozmiar wraca po powrocie do większej rozdzielczości.
+- **Tekst:** zakres 12–20 px. Zakładki i gotowe wartości układają się w więcej rzędów w węższym oknie. Wszystkie zakładki można przewijać.
+
+**Ctrl+F8** otwiera menu i przywraca domyślne tło, tekst, wielkość oraz środek ekranu. W „Okno” jest też przycisk resetu. Ułatwienia rozgrywki i język pozostają ustawione. Przy zmienionym klawiszu menu skrót to Ctrl + ten klawisz.
+
+Wygląd i położenie zapisują się po zakończeniu regulacji, przy zamknięciu menu i przy wyłączeniu pluginu. Zwykły reset ułatwień nie resetuje wyglądu. Przewijanie nad menu blokuje jednoczesny zoom gry; kliknięcie poza oknem kończy wpisywanie w polu menu.
 
 ## Statek
 
@@ -101,6 +115,6 @@ F8 obsługuje Flotsam Plus. Jeśli używasz trainera Hansjoy, jego F9 pozostaje 
 
 Przy problemie sprawdź `BepInEx/LogOutput.log` i wpisy „Flotsam Plus”. W przypadku niezgodnej wersji gry jedna grupa opcji może pozostać niedostępna, a pozostałe działać dalej.
 
-Wersja 1.3.0 przechodzi kompilację, 43 testy logiki i 82 kontrole API/IL. Nowe opcje wymagają jeszcze potwierdzenia w grze. Działanie wersji 1.2.0 i 1.1.0 użytkownik potwierdził 8 listopada 2026. Poprzednie paczki pozostają w repozytorium.
+Wersja 1.4.0 przechodzi kompilację, 58 testów logiki i 92 kontrole API/IL. Nowe opcje wymagają jeszcze potwierdzenia w grze. Działanie wersji 1.2.0 i 1.1.0 użytkownik potwierdził 8 listopada 2026. Poprzednie paczki pozostają w repozytorium.
 
 Aby odinstalować, zamknij grę i usuń `BepInEx/plugins/FlotsamPuchatekPlus`.
