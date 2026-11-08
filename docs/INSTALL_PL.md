@@ -89,6 +89,6 @@ F8 obsługuje Flotsam Plus. Jeśli używasz trainera Hansjoy, jego F9 pozostaje 
 
 Przy problemie sprawdź `BepInEx/LogOutput.log` i wpisy „Flotsam Plus”. W przypadku niezgodnej wersji gry jedna grupa opcji może pozostać niedostępna, a pozostałe działać dalej.
 
-Wersja 1.2.0 przechodzi kompilację, 27 testów logiki i 68 kontroli API/IL; nie wykonano jeszcze próby tej wersji w uruchomionej grze. Działanie poprzedniej wersji 1.1.0 użytkownik potwierdził 8 listopada 2026. Poprzednie paczki pozostają w repozytorium.
+Wersja 1.2.0 przechodzi kompilację, 27 testów logiki i 68 kontroli API/IL; użytkownik potwierdził działanie tej wersji w uruchomionej grze 8 listopada 2026. Działanie poprzedniej wersji 1.1.0 użytkownik potwierdził 8 listopada 2026. Poprzednie paczki pozostają w repozytorium.
 
 Aby odinstalować, zamknij grę i usuń `BepInEx/plugins/FlotsamPuchatekPlus`.
