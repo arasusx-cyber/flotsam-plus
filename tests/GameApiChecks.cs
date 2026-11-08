@@ -79,6 +79,44 @@ internal static class GameApiChecks
                 .Fields.Any(f => f.Name == "Force"), "Physical acceleration mode exists");
             Method("WorldMapTownheartPhycis2D", "get_ProcessedInput", "System.Boolean");
 
+            MethodDefinition capacity = Method("Engine", "ReturnTownTugCapacity", "System.Single");
+            MethodDefinition engineLate = Method("Engine", "LateUpdate", "System.Void");
+            Check(Calls(engineLate, "Engine", "ReturnTownTugCapacity") &&
+                Calls(engineLate, "Engine", "set_TownAvailableTugCapacity") &&
+                Calls(engineLate, "Engine", "set_TownUsedTugCapacityPercentage"),
+                "The native frame update refreshes available capacity and percentage from the patched result");
+            Check(capacity.HasBody && Reads(capacity, "Engine", "_tugCapacity") > 0 &&
+                Reads(capacity, "Engine", "_townTugCapacity") == 0,
+                "Capacity is recomputed from native engine capacity rather than a scaled cache");
+            MethodDefinition canTug = Method("Engine", "CanTug", "System.Boolean", "PlaceableProperties");
+            Check(Type("Engine").Fields.Any(f => f.Name == "_townheartEngine" &&
+                f.IsStatic && f.FieldType.FullName == "Engine"),
+                "The unlimited patch can inject the current townheart engine for player scoping");
+            Check(Reads(canTug, "Engine", "_townheartEngine") > 0 &&
+                Calls(canTug, "PlaceableProperties", "GetWeightModeWeight") &&
+                Calls(canTug, "Engine", "get_TownAvailableTugCapacity"),
+                "Native CanTug checks the engine and compares placement weight with available capacity");
+            string[] allowedTugCalls = { "UnityEngine.Object.op_Equality",
+                "PlaceableProperties.GetWeightModeWeight", "Engine.get_TownAvailableTugCapacity" };
+            Check(canTug.Body.Instructions.Where(i => i.Operand is MethodReference)
+                .Select(i => (MethodReference)i.Operand)
+                .All(m => allowedTugCalls.Contains(m.DeclaringType.FullName + "." + m.Name)),
+                "The bypassed CanTug path contains no resource, unlock, connection or geometry rules");
+            Method("Engine", "get_TownTugCapacity", "System.Single");
+            Method("Engine", "get_TownWeight", "System.Single");
+            MethodDefinition canPlace = Method("BuildableProperties", "ReturnCanBePlaced", "System.Boolean",
+                "Community", "System.Boolean");
+            Check(Calls(canPlace, "Engine", "CanTug") &&
+                Calls(canPlace, "ResourceManager", "AreCommunityResourcesAvailable") &&
+                Calls(canPlace, "Community", "IsThereAMooringPointFree") &&
+                Calls(canPlace, "BuildableProperties", "ReturnBuildableRequirement"),
+                "Weight permission is separate from native resource, mooring and buildable checks");
+            Console.WriteLine("Capacity-related callers: " + string.Join(", ",
+                _game.MainModule.Types.SelectMany(t => t.Methods)
+                    .Where(m => m.HasBody && (Calls(m, "Engine", "CanTug") ||
+                        Calls(m, "Engine", "get_TownAvailableTugCapacity")))
+                    .Select(m => m.DeclaringType.FullName + "." + m.Name)));
+
             var building = new List<MethodDefinition>();
             foreach (string name in new[] { "StartBuilding", "Upgrade", "TryToStartUpgrade", "StartUpgrade" })
                 building.Add(Method("Buildable", name, "System.Void"));
@@ -161,16 +199,25 @@ internal static class GameApiChecks
 
             using (AssemblyDefinition plugin = AssemblyDefinition.ReadAssembly(args[1]))
             {
-                Check(plugin.Name.Version.ToString() == "1.2.0.0", "Built plugin has release version 1.2.0");
+                Check(plugin.Name.Version.ToString() == "1.3.0.0", "Built plugin has release version 1.3.0");
                 string[] expected = {
                     "ShipSpeedPatch", "ShipTurningPatch", "PathMovementPatch", "TravelEnergyPatch",
                     "TravelCostPatch", "TravelRangePatch", "TravelCooldownPatch", "InstantBuildingPatch",
                     "ResearchSpeedPatch", "RestNightPatch", "ShipPhysicsPatch", "ShipForcePatch",
-                    "ResidentSpeedPatch", "ResidentNavMeshSpeedPatch"
+                    "ResidentSpeedPatch", "ResidentNavMeshSpeedPatch",
+                    "TownCapacityPatch", "UnlimitedTownWeightPatch"
                 };
                 Check(expected.All(n => plugin.MainModule.Types.Any(t =>
                     t.Name == n && t.CustomAttributes.Any(a => a.AttributeType.Name == "HarmonyPatch"))),
-                    "All fourteen gameplay Harmony patch classes are included in the binary");
+                    "All sixteen gameplay Harmony patch classes are included in the binary");
+                foreach (string name in new[] { "TownCapacityPatch", "UnlimitedTownWeightPatch" })
+                {
+                    MethodDefinition callback = plugin.MainModule.Types.Single(t => t.Name == name)
+                        .Methods.Single(m => m.Name == "Postfix" || m.Name == "Prefix");
+                    Check(Calls(callback, "Puchatek.FlotsamPlus.Plugin", "IsPlayerEngine") &&
+                        Reads(callback, "Puchatek.FlotsamPlus.Plugin", "CapacityReady") > 0,
+                        name + " checks compatibility and player ownership in the built DLL");
+                }
                 MethodDefinition grant = plugin.MainModule.Types.Single(t => t.Name == "ResidentTools")
                     .Methods.Single(m => m.Name == "AddPoints");
                 Check(Calls(grant, "DrifterAttributes", "get_AvailableSpendingPointsUpdatedEvent") &&
