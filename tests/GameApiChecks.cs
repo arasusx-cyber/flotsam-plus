@@ -34,6 +34,12 @@ internal static class GameApiChecks
             i.Operand is FieldReference f && f.DeclaringType.FullName == owner && f.Name == field);
     }
 
+    private static bool Calls(MethodDefinition method, string owner, string name)
+    {
+        return method.Body.Instructions.Any(i => i.Operand is MethodReference call &&
+            call.DeclaringType.FullName == owner && call.Name == name);
+    }
+
     private static int Main(string[] args)
     {
         if (args.Length != 2)
@@ -108,17 +114,74 @@ internal static class GameApiChecks
             Method("Buildable", "get_Community", "Community");
             Method("Engine", "get_Buildable", "Buildable");
 
+            Method("Navigator", "ReturnSpeed", "System.Single", "Navigator/TerrainType");
+            Check(Type("Navigator").Fields.Any(f => f.Name == "_agent" &&
+                f.FieldType.FullName == "Agent"), "Resident speed patch injects the native Agent owner");
+            MethodDefinition defaultSpeed = Method("Navigator", "ReturnSpeed", "System.Single");
+            Check(Calls(defaultSpeed, "Navigator", "ReturnSpeed"),
+                "Parameterless movement delegates to the patched terrain getter");
+            MethodDefinition follow = Method("PathfinderNavigator", "FollowPathFixedDeltaTime",
+                "System.Void", "GraphBase", "System.Single");
+            Check(Calls(follow, "Navigator", "ReturnSpeed"),
+                "Construction and water paths consume the native speed getter");
+            Method("UnityNavMeshNavigator", "Update", "System.Void");
+            Method("UnityNavMeshNavigator", "get_Navigator", "Navigator");
+            Method("UnityNavMeshNavigator", "get_UnityNavMeshAgent", "UnityEngine.AI.NavMeshAgent");
+            Check(Calls(Type("Navigator").Methods.Single(m => m.Name == "UpdateTerrain"),
+                "UnityEngine.AI.NavMeshAgent", "set_speed"),
+                "Island navigation caches speed, requiring the live refresh patch");
+
+            Method("DrifterAttributes", "get_SpendablePoints", "System.Int32");
+            Check(Type("DrifterAttributes").Fields.Any(f =>
+                f.Name == "<SpendablePoints>k__BackingField" && f.FieldType.FullName == "System.Int32" &&
+                !f.IsStatic), "Skill grants target the per-resident unspent counter");
+            Method("DrifterAttributes", "get_AvailableSpendingPointsUpdatedEvent",
+                "UnityEngine.Events.UnityEvent");
+            TypeDefinition persisted = Type("DrifterAttributes").NestedTypes.Single(t => t.Name == "PersistentData");
+            Check(persisted.Fields.Any(f => f.Name == "SpendablePoints" &&
+                f.CustomAttributes.Any(a => a.AttributeType.Name == "DataMemberAttribute")),
+                "The ordinary save format includes unspent skill points");
+            Check(Calls(persisted.Methods.Single(m => m.IsConstructor),
+                "DrifterAttributes", "get_SpendablePoints") &&
+                Calls(persisted.Methods.Single(m => m.Name == "Restore"),
+                "DrifterAttributes", "set_SpendablePoints"),
+                "Native saving and restoring preserve the unspent counter directly");
+            Method("LandmarkSpawner", "SetScoutingState", "System.Void", "ScoutingState");
+            Method("PointOfInterestSpawner", "SetScoutingState", "System.Void", "ScoutingState");
+            foreach (var field in new[] {
+                ("_instances", "System.Collections.Generic.List`1<WorldMapFogOfWar>"),
+                ("_colors", "UnityEngine.Color[]"), ("_mesh", "UnityEngine.Mesh") })
+                Check(Type("WorldMapFogOfWar").Fields.Any(f =>
+                    f.Name == field.Item1 && f.FieldType.FullName == field.Item2),
+                    "Fog reveal field " + field.Item1 + " matches the native map");
+            MethodDefinition alphas = Method("WorldMapFogOfWar", "ReturnAlphas", "System.Byte[]");
+            Check(Reads(alphas, "WorldMapFogOfWar", "_colors") > 0,
+                "The native fog serializer reads the same colors that reveal updates");
+            Method("WorldMapFogOfWar", "get_WorldTile", "WorldTile");
+
             using (AssemblyDefinition plugin = AssemblyDefinition.ReadAssembly(args[1]))
             {
-                Check(plugin.Name.Version.ToString() == "1.1.0.0", "Built plugin has release version 1.1.0");
+                Check(plugin.Name.Version.ToString() == "1.2.0.0", "Built plugin has release version 1.2.0");
                 string[] expected = {
                     "ShipSpeedPatch", "ShipTurningPatch", "PathMovementPatch", "TravelEnergyPatch",
                     "TravelCostPatch", "TravelRangePatch", "TravelCooldownPatch", "InstantBuildingPatch",
-                    "ResearchSpeedPatch", "RestNightPatch", "ShipPhysicsPatch", "ShipForcePatch"
+                    "ResearchSpeedPatch", "RestNightPatch", "ShipPhysicsPatch", "ShipForcePatch",
+                    "ResidentSpeedPatch", "ResidentNavMeshSpeedPatch"
                 };
                 Check(expected.All(n => plugin.MainModule.Types.Any(t =>
                     t.Name == n && t.CustomAttributes.Any(a => a.AttributeType.Name == "HarmonyPatch"))),
-                    "All twelve new Harmony patch classes are included in the binary");
+                    "All fourteen gameplay Harmony patch classes are included in the binary");
+                MethodDefinition grant = plugin.MainModule.Types.Single(t => t.Name == "ResidentTools")
+                    .Methods.Single(m => m.Name == "AddPoints");
+                Check(Calls(grant, "DrifterAttributes", "get_AvailableSpendingPointsUpdatedEvent") &&
+                    !Calls(grant, "DrifterAttributes", "AddLevel") &&
+                    !Calls(grant, "DrifterAttributes", "AddTotalExperience"),
+                    "The built skill action refreshes the native UI without granting XP or levels");
+                MethodDefinition reveal = plugin.MainModule.Types.Single(t => t.Name == "MapTools")
+                    .Methods.Single(m => m.Name == "Reveal");
+                Check(!reveal.Body.Instructions.Any(i => i.Operand is MethodReference call &&
+                    (call.Name == "Scout" || call.Name == "StartQuest" || call.Name == "AddNextTile")),
+                    "Map reveal does not force scouting quests or generate future world tiles");
                 Check(!plugin.MainModule.AssemblyReferences.Any(a => a.Name == "Mono.Cecil"),
                     "Game API checker dependency is not included in the plugin");
             }

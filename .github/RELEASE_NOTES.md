@@ -1,13 +1,13 @@
-# Flotsam Plus 1.1.0
+# Flotsam Plus 1.2.0
 
-- Cztery zakładki w polskim menu F8.
-- Osobne mnożniki prędkości, zwrotności, przyspieszenia i hamowania ×1–×5.
-- Podróż bez zużywania energii i reset ustawień statku.
-- Natychmiastowe nowe budowy oraz ulepszenia bez materiałów.
-- Szybkość badań ×1–×100.
-- Wyłączenie nowych nocnych zadań snu.
-- Zachowane opcje głodu, pragnienia i dodawania surowców.
+- Odkrycie całej wygenerowanej mapy i automatyczne odsłanianie kolejnych obszarów.
+- Suwak chodzenia i pływania mieszkańców ×1–×5, również na wyspach.
+- Wybór mieszkańca i dodawanie 1–100 punktów umiejętności do rozdania w panelu postaci.
+- Zachowane XP, poziom, punkty badań i limity umiejętności.
+- Pięć zakładek w polskim menu F8; wszystkie opcje 1.1.0 pozostają dostępne.
+
+Mapa powstaje etapami. Odkrywanie obejmuje dostępne części świata i nie wymusza przyszłych biomów ani zadań fabularnych. Odkrycia i dodane punkty zostają w zapisie; reset ustawień ich nie cofa.
 
 Zamknij grę i nadpisz dotychczasową DLL, wypakowując BepInEx z paczki do katalogu z Flotsam.exe. Menu: F8. Nie dodawaj drugiej kopii pluginu.
 
-Przeszło 21 testów logiki i 43 kontrole API/IL. Nowej wersji nie przetestowano jeszcze w uruchomionej grze. Pełna instrukcja i ograniczenia są w paczce.
+Przeszło 27 testów logiki i 68 kontroli API/IL. Wersji 1.2.0 nie przetestowano jeszcze w uruchomionej grze. Użytkownik potwierdził działanie 1.1.0.

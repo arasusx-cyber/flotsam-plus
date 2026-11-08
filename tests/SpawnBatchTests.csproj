@@ -9,6 +9,8 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="TuningChecks.cs" />
+    <Compile Include="PointGrantChecks.cs" />
+    <Compile Include="../src/PointGrant.cs" Link="PointGrant.cs" />
     <Compile Include="../src/SpawnBatch.cs" Link="SpawnBatch.cs" />
     <Compile Include="../src/Tuning.cs" Link="Tuning.cs" />
   </ItemGroup>

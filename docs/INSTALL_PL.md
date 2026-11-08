@@ -1,4 +1,4 @@
-# Instalacja Flotsam Plus 1.1.0
+# Instalacja Flotsam Plus 1.2.0
 
 ## Instalacja i aktualizacja
 
@@ -12,7 +12,7 @@ BepInEx/plugins/FlotsamPuchatekPlus/FlotsamPuchatekPlus.dll
 
 4. Wczytaj zapis i naciśnij **F8**.
 
-Nie zostawiaj dodatkowej kopii DLL pluginu w innym folderze BepInEx. Konfiguracja z 1.0.0 nadal jest używana.
+Nie zostawiaj dodatkowej kopii DLL pluginu w innym folderze BepInEx. Konfiguracja z 1.0.0 i 1.1.0 nadal jest używana. Nowe opcje początkowo są wyłączone lub ustawione na ×1.
 
 Pierwsza instalacja wymaga Flotsam na Windows z `Flotsam_Data/Managed` i BepInEx 5.4.x x64. Jeśli go nie masz, zainstaluj [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21), uruchom grę raz i zamknij ją. Paczka pluginu nie zawiera loadera ani bibliotek gry.
 
@@ -37,7 +37,13 @@ Głód i pragnienie działają osobno. Włączenie od razu zaspokaja potrzebę i
 
 „Wyłącz nocny sen / odpoczynek” zapobiega nowym nocnym projektom snu. W tej wersji gry odpoczynek jest zadaniem nocnym, bez osobnego aktywnego licznika zmęczenia. Już śpiący mieszkańcy kończą sen normalnie, aby zachować prawidłowe wyjście z łóżek i domów.
 
-Opcje obejmują mieszkańców osady gracza.
+Opcje obejmują żywych mieszkańców osady gracza.
+
+Szybkość chodzenia i pływania: ×1–×5. Obejmuje też chodzenie po wyspach. Zmiana nie podnosi atrybutu Athletics i nie zmienia prędkości statku ani samych łodzi.
+
+W sekcji „Punkty umiejętności” wybierz mieszkańca z listy, wpisz 1–100 i kliknij „Dodaj punkty”. Licznik to prawdziwe punkty do rozdania w zwykłym panelu postaci. Poziom, XP i punkty badań pozostają bez zmian. Obowiązują normalne limity poziomu poszczególnych umiejętności. Dodane punkty zapisują się razem z grą.
+
+Lista odświeża się co dwie sekundy, gdy menu jest otwarte; można odświeżyć ją ręcznie. Zmiana osady czy zapisu czyści wybór postaci. Martwy lub przeniesiony mieszkaniec nie otrzyma punktów.
 
 ## Budowa i badania
 
@@ -53,9 +59,17 @@ Wybierz przedmiot, wpisz 1–5000 i kliknij „Dodaj”. Wyszukiwanie obejmuje n
 
 Surowce trafiają do pasujących magazynów z wolną pojemnością. Woda wymaga magazynu na płyny. Przy braku miejsca dodawanie zatrzymuje się i pokazuje rzeczywistą ilość. Zmiana zapisu lub osady przerywa operację.
 
+## Mapa
+
+Przycisk „Odkryj całą dostępną mapę” odsłania mgłę i istniejące miejsca we wszystkich wygenerowanych częściach świata. Opcja „Automatycznie odkrywaj także nowe obszary” powtarza odkrywanie podczas podróży i obejmuje nowe obszary po ich wygenerowaniu.
+
+Świat powstaje etapami. Funkcja nie wymusza generowania przyszłych biomów, wejścia do regionów ani wykonywania zadań zwiadowczych. Zablokowane miejsca fabularne pozostają pod kontrolą gry. Nie przesuwa osady i nie kończy aktywnych zadań.
+
+Odkryta mgła i stany istniejących miejsc korzystają ze zwykłego zapisu gry. Wyłączenie automatycznego odkrywania nie ukrywa ich ponownie.
+
 ## Reset i zapis
 
-W zakładce „Budowa i badania” można wyłączyć wszystkie ułatwienia i przywrócić mnożniki ×1. Reset nie usuwa dodanych przedmiotów, nie rozbiera ukończonych budynków i nie cofa badań.
+W zakładce „Budowa i badania” można wyłączyć wszystkie ułatwienia i przywrócić mnożniki ×1. Reset nie usuwa dodanych przedmiotów i punktów umiejętności, nie ukrywa odkrytej mapy, nie rozbiera ukończonych budynków i nie cofa badań.
 
 Przed zmianami zachowaj kopię zapisu. Katalog zapisów:
 
@@ -75,6 +89,6 @@ F8 obsługuje Flotsam Plus. Jeśli używasz trainera Hansjoy, jego F9 pozostaje 
 
 Przy problemie sprawdź `BepInEx/LogOutput.log` i wpisy „Flotsam Plus”. W przypadku niezgodnej wersji gry jedna grupa opcji może pozostać niedostępna, a pozostałe działać dalej.
 
-Wersja 1.1.0 jest skompilowana i sprawdzona automatycznie; nie wykonano jeszcze próby w uruchomionej grze. Paczka 1.0.0 pozostaje w repozytorium.
+Wersja 1.2.0 przechodzi kompilację, 27 testów logiki i 68 kontroli API/IL; nie wykonano jeszcze próby tej wersji w uruchomionej grze. Działanie poprzedniej wersji 1.1.0 użytkownik potwierdził 8 listopada 2026. Poprzednie paczki pozostają w repozytorium.
 
 Aby odinstalować, zamknij grę i usuń `BepInEx/plugins/FlotsamPuchatekPlus`.

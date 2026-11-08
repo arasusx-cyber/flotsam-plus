@@ -21,7 +21,7 @@ def main():
     required += [managed / name for name in [
         "UnityEngine.dll", "UnityEngine.CoreModule.dll", "UnityEngine.IMGUIModule.dll",
         "UnityEngine.InputLegacyModule.dll", "UnityEngine.TextRenderingModule.dll",
-        "UnityEngine.Physics2DModule.dll"
+        "UnityEngine.Physics2DModule.dll", "UnityEngine.AIModule.dll"
     ]]
     missing = [str(path) for path in required if not path.is_file()]
     if missing:
@@ -43,7 +43,7 @@ def main():
             "method": "Local build using scripts/build.py",
             "game_assembly_sha256": sha256(managed / "Assembly-CSharp.dll"),
             "target_framework": "netstandard2.1",
-            "queue_and_tuning_checks": 21,
+            "queue_tuning_and_point_checks": 27,
             "game_api_checks": "Passed against the supplied game assembly; not a gameplay test.",
             "unity_reference_api": "UnityEngine.Modules 2021.3.33; runtime damping names support Unity 6.",
             "gameplay_test": "Not performed by this script; test the new DLL in the game.",
