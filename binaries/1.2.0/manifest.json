@@ -20,6 +20,14 @@
     "queue_tuning_and_point_checks": 27,
     "game_api_checks": "Passed against the supplied game assembly; not a gameplay test.",
     "unity_reference_api": "UnityEngine.Modules 2021.3.33; runtime damping names support Unity 6.",
-    "gameplay_test": "Not performed by this script; test the new DLL in the game."
+    "gameplay_test": "Not performed by the build script. User confirmation is recorded in gameplay_validation."
+  },
+  "gameplay_validation": {
+    "status": "confirmed_by_user",
+    "date": "2026-11-08",
+    "version": "1.2.0",
+    "source": "Repository owner report",
+    "screenshot": "docs/images/menu-1.2.0.png",
+    "screenshot_subject": "Flotsam Plus 1.2.0 in-game F8 menu, ship tab"
   }
 }
