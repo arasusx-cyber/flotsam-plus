@@ -58,6 +58,7 @@ internal static class Program
         while (!maximum.Finished) maximum.Step(() => true, 24);
         Check(maximum.Added == 5000, "Maximum batch completes exactly");
         TuningChecks.Run(Check);
+        PointGrantChecks.Run(Check);
         Console.WriteLine("Passed " + _checks + " checks.");
     }
 }
