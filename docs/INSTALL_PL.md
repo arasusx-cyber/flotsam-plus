@@ -1,4 +1,4 @@
-# Instalacja Flotsam Plus 1.2.0
+# Instalacja Flotsam Plus 1.3.0
 
 ## Instalacja i aktualizacja
 
@@ -12,20 +12,32 @@ BepInEx/plugins/FlotsamPuchatekPlus/FlotsamPuchatekPlus.dll
 
 4. Wczytaj zapis i naciśnij **F8**.
 
-Nie zostawiaj dodatkowej kopii DLL pluginu w innym folderze BepInEx. Konfiguracja z 1.0.0 i 1.1.0 nadal jest używana. Nowe opcje początkowo są wyłączone lub ustawione na ×1.
+Nie zostawiaj dodatkowej kopii DLL pluginu w innym folderze BepInEx. Konfiguracja z 1.0.0, 1.1.0 i 1.2.0 nadal jest używana. Nowe opcje początkowo są wyłączone lub ustawione na ×1.
 
 Pierwsza instalacja wymaga Flotsam na Windows z `Flotsam_Data/Managed` i BepInEx 5.4.x x64. Jeśli go nie masz, zainstaluj [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21), uruchom grę raz i zamknij ją. Paczka pluginu nie zawiera loadera ani bibliotek gry.
+
+## Język menu
+
+W górnej części menu F8 wybierz **PL** lub **EN**. Zmiana jest natychmiastowa i zapamiętywana w istniejącym pliku konfiguracji: sekcja `[Menu]`, `Jezyk = Polski` lub `Jezyk = English`. Domyślnie pozostaje polski. Reset ułatwień nie zmienia języka.
+
+Język obejmuje przyciski, zakładki, opisy i komunikaty, także wynik wcześniej wykonanej operacji. Nazwy surowców, kategorii i mieszkańców pochodzą z gry; język moda nie zmienia ustawienia języka samego Flotsam.
 
 ## Statek
 
 | Ustawienie | Zakres / działanie |
 |---|---|
+| Udźwig osady | ×1–×100; zwiększa limit całkowitej wagi |
+| Wyłącz limit wagi osady | Pozwala dalej budować mimo przekroczenia wagi |
 | Prędkość | ×1–×5; niezależna od skrętu |
 | Zwrotność | ×1–×5; szybkość obrotu |
 | Przyspieszenie | ×1–×5; mocniejsza reakcja fizycznego napędu |
 | Hamowanie | ×1–×5; mniejszy dryf po puszczeniu sterowania |
 | Podróż bez energii | Nie pobiera energii za ruch; urządzenia nadal mają swoje koszty |
-| Przywróć normalne ustawienia statku | Cztery mnożniki ×1 i normalne koszty podróży |
+| Przywróć normalne ustawienia statku | Mnożniki ruchu i udźwigu ×1, limit wagi włączony, normalne koszty podróży |
+
+Aby odblokować rozbudowę zablokowaną wagą, otwórz **F8 → Statek** i włącz **Wyłącz limit wagi osady** albo zwiększ **Udźwig osady**. Mnożnik jest nieaktywny, gdy działa opcja bez limitu; jego ustawienie pozostaje zapamiętane. Gra przelicza udźwig w najbliższej klatce, także po zmianie zapisu i po resecie.
+
+Dotyczy to wagi całej osady, nie liczby miejsc w magazynach. Filtry magazynów, wymagania podłączenia, geometrii i odblokowania budynków pozostają pod kontrolą gry. Wyłączenie limitu nie zeruje rzeczywistej wagi osady i nie usuwa zbudowanych budynków; po powrocie do zwykłego udźwigu osada może znów być przeciążona.
 
 Prędkość i skręcanie obejmują sterowanie ręczne oraz trasę wyznaczoną na mapie. Gra ma też bezpośrednie tryby ruchu bez fazy rozpędzania: mnożnik przyspieszenia działa w trybie fizycznego napędu. Hamowanie dotyczy fizycznego dryfu po puszczeniu sterowania; ukończona trasa zatrzymuje się zgodnie z zasadami gry.
 
@@ -89,6 +101,6 @@ F8 obsługuje Flotsam Plus. Jeśli używasz trainera Hansjoy, jego F9 pozostaje 
 
 Przy problemie sprawdź `BepInEx/LogOutput.log` i wpisy „Flotsam Plus”. W przypadku niezgodnej wersji gry jedna grupa opcji może pozostać niedostępna, a pozostałe działać dalej.
 
-Wersja 1.2.0 przechodzi kompilację, 27 testów logiki i 68 kontroli API/IL; użytkownik potwierdził działanie tej wersji w uruchomionej grze 8 listopada 2026. Działanie poprzedniej wersji 1.1.0 użytkownik potwierdził 8 listopada 2026. Poprzednie paczki pozostają w repozytorium.
+Wersja 1.3.0 przechodzi kompilację, 43 testy logiki i 82 kontrole API/IL. Nowe opcje wymagają jeszcze potwierdzenia w grze. Działanie wersji 1.2.0 i 1.1.0 użytkownik potwierdził 8 listopada 2026. Poprzednie paczki pozostają w repozytorium.
 
 Aby odinstalować, zamknij grę i usuń `BepInEx/plugins/FlotsamPuchatekPlus`.

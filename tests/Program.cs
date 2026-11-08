@@ -59,6 +59,7 @@ internal static class Program
         Check(maximum.Added == 5000, "Maximum batch completes exactly");
         TuningChecks.Run(Check);
         PointGrantChecks.Run(Check);
+        LocalizationCapacityChecks.Run(Check);
         Console.WriteLine("Passed " + _checks + " checks.");
     }
 }

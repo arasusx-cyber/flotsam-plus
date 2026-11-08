@@ -75,6 +75,7 @@ def package_release(tag=None):
     payload = {
         "BepInEx/plugins/FlotsamPuchatekPlus/" + DLL_NAME: (binary_directory() / DLL_NAME).read_bytes(),
         "INSTRUKCJA_PL.txt": (ROOT / "docs/INSTALL_PL.md").read_bytes(),
+        "INSTALL_EN.txt": (ROOT / "docs/INSTALL_EN.md").read_bytes(),
         "LICENSE": (ROOT / "LICENSE").read_bytes(),
         "NOTICE.md": (ROOT / "NOTICE.md").read_bytes(),
         "CHANGELOG.md": (ROOT / "CHANGELOG.md").read_bytes(),

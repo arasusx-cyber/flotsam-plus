@@ -11,7 +11,8 @@ namespace Puchatek.FlotsamPlus
         public int Remaining => Requested - Added;
         public bool Finished { get; private set; }
         public bool Cancelled { get; private set; }
-        public string Failure { get; private set; }
+        public string Failure => FailureMessage?.ToString();
+        public LocalizedMessage FailureMessage { get; private set; }
 
         public SpawnBatch(int requested)
         {
@@ -31,7 +32,7 @@ namespace Puchatek.FlotsamPlus
                 {
                     if (!tryAddOne())
                     {
-                        Failure = "Brak wolnego miejsca albo odpowiedniego magazynu.";
+                        FailureMessage = I18n.M("Brak wolnego miejsca albo odpowiedniego magazynu.");
                         Finished = true;
                         return;
                     }
@@ -40,7 +41,7 @@ namespace Puchatek.FlotsamPlus
                 }
                 catch (Exception error)
                 {
-                    Failure = "Dodawanie przerwane: " + error.Message;
+                    FailureMessage = I18n.M("Dodawanie przerwane: {0}", I18n.M(error.Message));
                     Finished = true;
                     return;
                 }
@@ -51,7 +52,7 @@ namespace Puchatek.FlotsamPlus
         {
             if (Finished) return;
             Cancelled = true;
-            Failure = reason;
+            FailureMessage = I18n.M(reason);
             Finished = true;
         }
     }

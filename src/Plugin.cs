@@ -8,10 +8,11 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using PajamaLlama.Fltsm;
 using UnityEngine;
+using static Puchatek.FlotsamPlus.I18n;
 
 namespace Puchatek.FlotsamPlus
 {
-    [BepInPlugin(Guid, "Flotsam Plus", "1.2.0")]
+    [BepInPlugin(Guid, "Flotsam Plus", "1.3.0")]
     [BepInProcess("Flotsam.exe")]
     public sealed class Plugin : BaseUnityPlugin
     {
@@ -29,6 +30,10 @@ namespace Puchatek.FlotsamPlus
         internal ConfigEntry<float> ResearchSpeed;
         internal ConfigEntry<float> ResidentSpeed;
         internal ConfigEntry<bool> AutoReveal;
+        internal ConfigEntry<float> TownCapacity;
+        internal ConfigEntry<bool> NoWeightLimit;
+        internal bool CapacityReady;
+        private ConfigEntry<UiLanguage> _language;
         internal bool ShipReady;
         internal bool PhysicsReady;
         internal bool EnergyReady;
@@ -53,7 +58,7 @@ namespace Puchatek.FlotsamPlus
         private string _search = "";
         private string _filter = "";
         private string _amount = "100";
-        private string _message = "Wybierz przedmiot, ustaw ilość i kliknij Dodaj.";
+        private LocalizedMessage _message = M("Wybierz przedmiot, ustaw ilość i kliknij Dodaj.");
         private string _lastError;
         private readonly List<ResourceEntry> _items = new List<ResourceEntry>();
         private readonly List<ResourceEntry> _filtered = new List<ResourceEntry>();
@@ -69,8 +74,8 @@ namespace Puchatek.FlotsamPlus
         private Agent _selectedResident;
         private Vector2 _residentsScroll;
         private string _pointAmount = "5";
-        private string _residentMessage = "Wybierz mieszkańca, aby dodać punkty umiejętności.";
-        private string _mapMessage = "Odkrywanie obejmuje wszystkie wygenerowane części bieżącego świata.";
+        private LocalizedMessage _residentMessage = M("Wybierz mieszkańca, aby dodać punkty umiejętności.");
+        private LocalizedMessage _mapMessage = M("Odkrywanie obejmuje wszystkie wygenerowane części bieżącego świata.");
         private float _nextMapReveal;
 
         private sealed class ResourceEntry
@@ -102,6 +107,13 @@ namespace Puchatek.FlotsamPlus
             ResidentSpeed = BindMultiplier("Mieszkancy", "PredkoscRuchu", 5f);
             AutoReveal = Config.Bind("Mapa", "AutomatyczneOdkrywanie", false,
                 "Odkrywa dostępną mapę oraz kolejne części świata po ich wygenerowaniu.");
+            // Keep all existing section/key names stable across UI languages.
+            TownCapacity = BindMultiplier("Statek", "Udzwig", WeightCapacity.MaximumMultiplier);
+            NoWeightLimit = Config.Bind("Statek", "BezLimituWagi", false,
+                "Disable the town weight limit. Storage space and other placement rules stay native.");
+            _language = Config.Bind("Menu", "Jezyk", UiLanguage.Polski,
+                "Menu language: Polski (PL) or English (EN).");
+            I18n.Language = _language.Value;
             _menuKey = Config.Bind("Menu", "Klawisz", KeyCode.F8,
                 "Klawisz otwierający i zamykający menu dodatku.");
             _harmony = new Harmony(Guid);
@@ -120,9 +132,11 @@ namespace Puchatek.FlotsamPlus
             RestReady = PatchGroup("Sen", typeof(RestNightPatch));
             ResidentsReady = PatchGroup("Ruch mieszkańców", typeof(ResidentSpeedPatch),
                 typeof(ResidentNavMeshSpeedPatch));
+            CapacityReady = PatchGroup("Town weight capacity", typeof(TownCapacityPatch),
+                typeof(UnlimitedTownWeightPatch));
             _pointsReady = InitializeAction("Punkty umiejętności", ResidentTools.InitializePoints);
             _mapReady = InitializeAction("Odkrywanie mapy", MapTools.Initialize);
-            Logger.LogInfo("Flotsam Plus 1.2.0 gotowy. Menu: " + _menuKey.Value);
+            Logger.LogInfo("Flotsam Plus 1.3.0 ready. Menu: " + _menuKey.Value);
         }
 
         private bool InitializeAction(string name, Action initialize)
@@ -179,11 +193,14 @@ namespace Puchatek.FlotsamPlus
         {
             ShipSpeed.Value = ShipTurning.Value = ShipAcceleration.Value = ShipBraking.Value = 1f;
             FreeTravel.Value = false;
+            TownCapacity.Value = 1f;
+            NoWeightLimit.Value = false;
             ShipPhysics.RestoreAll();
         }
 
         private void Update()
         {
+            I18n.Language = _language.Value;
             if (Input.GetKeyDown(_menuKey.Value))
             {
                 _open = !_open;
@@ -201,8 +218,8 @@ namespace Puchatek.FlotsamPlus
                 _selected = null;
                 _residents.Clear();
                 _selectedResident = null;
-                _residentMessage = "Wybierz mieszkańca, aby dodać punkty umiejętności.";
-                _mapMessage = "Odkrywanie obejmuje wszystkie wygenerowane części bieżącego świata.";
+                _residentMessage = M("Wybierz mieszkańca, aby dodać punkty umiejętności.");
+                _mapMessage = M("Odkrywanie obejmuje wszystkie wygenerowane części bieżącego świata.");
                 _nextMapReveal = 0;
                 _nextRefresh = 0;
                 if (current != null) ApplyNeedsNow();
@@ -331,7 +348,7 @@ namespace Puchatek.FlotsamPlus
             int amount;
             if (!int.TryParse(_amount, out amount) || amount < 1 || amount > 5000)
             {
-                _message = "Wpisz ilość od 1 do 5000.";
+                _message = M("Wpisz ilość od 1 do 5000.");
                 return;
             }
             _batchCommunity = _community;
@@ -344,9 +361,10 @@ namespace Puchatek.FlotsamPlus
         private void UpdateBatchMessage()
         {
             if (_batch == null || _batchItem == null) return;
-            string prefix = _batch.Finished ? "Dodano " : "Dodawanie: ";
-            _message = prefix + _batch.Added + " / " + _batch.Requested + " × " + _batchItem.Name;
-            if (!string.IsNullOrEmpty(_batch.Failure)) _message += ". " + _batch.Failure;
+            _message = M(_batch.Finished ? "Dodano {0} / {1} × {2}." : "Dodawanie: {0} / {1} × {2}.",
+                _batch.Added, _batch.Requested, _batchItem.Name);
+            if (_batch.FailureMessage != null)
+                _message = M("{0} {1}", _message, _batch.FailureMessage);
         }
 
         internal static bool Suppressed(Vitals vitals, VitalType type)
@@ -395,7 +413,7 @@ namespace Puchatek.FlotsamPlus
 
         private void ReportError(string message, Exception error)
         {
-            _message = message + " Szczegóły: BepInEx/LogOutput.log.";
+            _message = M("{0} Szczegóły: BepInEx/LogOutput.log.", M(message));
             if (_lastError != error.ToString()) Logger.LogError(error);
             _lastError = error.ToString();
         }
@@ -419,7 +437,7 @@ namespace Puchatek.FlotsamPlus
             {
                 GUI.enabled = true;
                 GUI.color = Color.white;
-                _window = GUI.Window(7408162, _window, DrawWindow, "Flotsam Plus 1.2.0");
+                _window = GUI.Window(7408162, _window, DrawWindow, "Flotsam Plus 1.3.0");
             }
             finally { GUI.enabled = oldEnabled; GUI.color = oldColor; }
         }
@@ -428,10 +446,20 @@ namespace Puchatek.FlotsamPlus
         private void DrawWindow(int id)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Menu: " + _menuKey.Value + "  |  Poprzedni trainer: F9", _smallStyle);
-            if (GUILayout.Button("Zamknij", GUILayout.Width(78))) _open = false;
+            GUILayout.Label(F("Menu: {0}  |  Poprzedni trainer: F9", _menuKey.Value), _smallStyle);
+            if (GUILayout.Button(T("Zamknij"), GUILayout.Width(78))) _open = false;
             GUILayout.EndHorizontal();
-            int nextTab = GUILayout.Toolbar(_tab, Tabs, GUILayout.Height(30));
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(T("Język:"), GUILayout.Width(65));
+            int currentLanguage = _language.Value == UiLanguage.English ? 1 : 0;
+            int nextLanguage = GUILayout.Toolbar(currentLanguage, new[] { "PL", "EN" }, GUILayout.Width(110));
+            if (nextLanguage != currentLanguage)
+            {
+                _language.Value = nextLanguage == 1 ? UiLanguage.English : UiLanguage.Polski;
+                I18n.Language = _language.Value;
+            }
+            GUILayout.EndHorizontal();
+            int nextTab = GUILayout.Toolbar(_tab, Array.ConvertAll(Tabs, T), GUILayout.Height(30));
             if (nextTab != _tab) { _tab = nextTab; _settingsScroll = Vector2.zero; }
             GUILayout.Space(8);
             if (_tab == 3) DrawResources();
@@ -450,33 +478,43 @@ namespace Puchatek.FlotsamPlus
 
         private void DrawShip()
         {
-            GUILayout.Label("Statek i podróż", _headerStyle);
-            DrawMultiplier(ShipSpeed, "Prędkość podróży", 5f, ShipReady);
-            DrawMultiplier(ShipTurning, "Zwrotność / szybkość skrętu", 5f, ShipReady);
-            DrawMultiplier(ShipAcceleration, "Przyspieszenie", 5f, PhysicsReady);
-            DrawMultiplier(ShipBraking, "Hamowanie / mniejsza bezwładność", 5f, PhysicsReady);
-            DrawToggle(FreeTravel, " Podróż bez zużywania energii", EnergyReady);
+            GUILayout.Label(T("Statek i podróż"), _headerStyle);
+            DrawToggle(NoWeightLimit, T(" Wyłącz limit wagi osady"), CapacityReady);
+            DrawMultiplier(TownCapacity, T("Udźwig osady"), WeightCapacity.MaximumMultiplier,
+                CapacityReady && !NoWeightLimit.Value);
+            if (IsPlayer(_community) && _community.Engine != null)
+                GUILayout.Label(F("Waga osady: {0:0}  |  Udźwig: {1}", Engine.TownWeight,
+                    CapacityReady && NoWeightLimit.Value ? T("bez limitu") :
+                    Engine.TownTugCapacity.ToString("0", I18n.Culture)), _smallStyle);
+            else GUILayout.Label(T("Wczytaj zapis, aby zobaczyć wagę i udźwig."), _smallStyle);
+            GUILayout.Label(T("Zwiększa udźwig, aby można było dalej budować. Nie powiększa magazynów. Zmiana działa po najbliższej klatce gry."), _smallStyle);
+            GUILayout.Space(10);
+            DrawMultiplier(ShipSpeed, T("Prędkość podróży"), 5f, ShipReady);
+            DrawMultiplier(ShipTurning, T("Zwrotność / szybkość skrętu"), 5f, ShipReady);
+            DrawMultiplier(ShipAcceleration, T("Przyspieszenie"), 5f, PhysicsReady);
+            DrawMultiplier(ShipBraking, T("Hamowanie / mniejsza bezwładność"), 5f, PhysicsReady);
+            DrawToggle(FreeTravel, T(" Podróż bez zużywania energii"), EnergyReady);
             GUILayout.Space(8);
-            GUILayout.Label("Prędkość i skręt są niezależne. Hamowanie ogranicza dryf po puszczeniu sterowania.",
+            GUILayout.Label(T("Prędkość i skręt są niezależne. Hamowanie ogranicza dryf po puszczeniu sterowania."),
                 _smallStyle);
-            if (GUILayout.Button("Przywróć normalne ustawienia statku", GUILayout.Height(30)))
+            if (GUILayout.Button(T("Przywróć normalne ustawienia statku"), GUILayout.Height(30)))
                 ResetShipSettings();
-            DrawAvailability(ShipReady && PhysicsReady && EnergyReady);
+            DrawAvailability(ShipReady && PhysicsReady && EnergyReady && CapacityReady);
         }
 
         private void DrawResidents()
         {
-            GUILayout.Label("Potrzeby mieszkańców", _headerStyle);
-            bool changed = DrawToggle(NoHunger, " Wyłącz głód", _patchesReady);
-            changed |= DrawToggle(NoThirst, " Wyłącz pragnienie", _patchesReady);
-            changed |= DrawToggle(NoRest, " Wyłącz nocny sen / odpoczynek", RestReady);
+            GUILayout.Label(T("Potrzeby mieszkańców"), _headerStyle);
+            bool changed = DrawToggle(NoHunger, T(" Wyłącz głód"), _patchesReady);
+            changed |= DrawToggle(NoThirst, T(" Wyłącz pragnienie"), _patchesReady);
+            changed |= DrawToggle(NoRest, T(" Wyłącz nocny sen / odpoczynek"), RestReady);
             if (changed) ApplyNeedsNow();
             GUILayout.Space(8);
-            GUILayout.Label("Opcje dotyczą mieszkańców Twojej osady. Nie rozpoczynają nocnego snu. Rozpoczęty wcześniej odpoczynek kończy się normalnie.",
+            GUILayout.Label(T("Opcje dotyczą mieszkańców Twojej osady. Nie rozpoczynają nocnego snu. Rozpoczęty wcześniej odpoczynek kończy się normalnie."),
                 _smallStyle);
             GUILayout.Space(10);
-            DrawMultiplier(ResidentSpeed, "Szybkość chodzenia i pływania", 5f, ResidentsReady);
-            GUILayout.Label("Dotyczy żywych mieszkańców Twojej osady, także podczas chodzenia po wyspach.", _smallStyle);
+            DrawMultiplier(ResidentSpeed, T("Szybkość chodzenia i pływania"), 5f, ResidentsReady);
+            GUILayout.Label(T("Dotyczy żywych mieszkańców Twojej osady, także podczas chodzenia po wyspach."), _smallStyle);
             DrawAvailability(_patchesReady && RestReady && ResidentsReady);
             GUILayout.Space(12);
             DrawResidentPoints();
@@ -497,14 +535,14 @@ namespace Puchatek.FlotsamPlus
         private void DrawResidentPoints()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Punkty umiejętności", _headerStyle);
+            GUILayout.Label(T("Punkty umiejętności"), _headerStyle);
             GUI.enabled = IsPlayer(_community);
-            if (GUILayout.Button("Odśwież listę", GUILayout.Width(110))) RefreshResidents();
+            if (GUILayout.Button(T("Odśwież listę"), GUILayout.Width(110))) RefreshResidents();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             if (!IsPlayer(_community))
             {
-                GUILayout.Label("Wczytaj zapis, aby wybrać mieszkańca.", _smallStyle);
+                GUILayout.Label(T("Wczytaj zapis, aby wybrać mieszkańca."), _smallStyle);
                 return;
             }
             _residentsScroll = GUILayout.BeginScrollView(_residentsScroll, GUI.skin.box,
@@ -515,29 +553,28 @@ namespace Puchatek.FlotsamPlus
                 Color before = GUI.backgroundColor;
                 if (ReferenceEquals(resident, _selectedResident))
                     GUI.backgroundColor = new Color(.45f, .85f, .9f);
-                if (GUILayout.Button(resident.Name + "  |  poziom " + resident.Attributes.Level +
-                    "  |  punkty: " + resident.Attributes.SpendablePoints, GUILayout.Height(26)))
+                if (GUILayout.Button(F("{0}  |  poziom {1}  |  punkty: {2}", resident.Name, resident.Attributes.Level,
+                    resident.Attributes.SpendablePoints), GUILayout.Height(26)))
                     _selectedResident = resident;
                 GUI.backgroundColor = before;
             }
-            if (_residents.Count == 0) GUILayout.Label("Brak dostępnych mieszkańców.");
+            if (_residents.Count == 0) GUILayout.Label(T("Brak dostępnych mieszkańców."));
             GUILayout.EndScrollView();
             bool valid = ResidentTools.IsResident(_selectedResident, _community) &&
                 _selectedResident.Attributes != null;
-            GUILayout.Label(valid ? "Wybrano: " + _selectedResident.Name + "  |  do rozdania: " +
-                _selectedResident.Attributes.SpendablePoints : "Wybierz mieszkańca z listy.", _smallStyle);
+            GUILayout.Label(valid ? F("Wybrano: {0}  |  do rozdania: {1}", _selectedResident.Name,
+                _selectedResident.Attributes.SpendablePoints) : T("Wybierz mieszkańca z listy."), _smallStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Punkty:", GUILayout.Width(50));
+            GUILayout.Label(T("Punkty:"), GUILayout.Width(50));
             _pointAmount = GUILayout.TextField(_pointAmount, 3, GUILayout.Width(45));
             foreach (int amount in new[] { 1, 5, 10, 50, 100 })
                 if (GUILayout.Button(amount.ToString(), GUILayout.Width(38))) _pointAmount = amount.ToString();
             GUI.enabled = _pointsReady && valid;
-            if (GUILayout.Button("Dodaj punkty", GUILayout.Height(28))) AddResidentPoints();
+            if (GUILayout.Button(T("Dodaj punkty"), GUILayout.Height(28))) AddResidentPoints();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
-            GUILayout.Box(_residentMessage, _messageStyle);
-            GUILayout.Label("Od 1 do 100 punktów na kliknięcie. Rozdaj je w zwykłym panelu postaci. " +
-                "Poziom i XP pozostają bez zmian; nadal obowiązują limity umiejętności gry.", _smallStyle);
+            GUILayout.Box(_residentMessage.ToString(), _messageStyle);
+            GUILayout.Label(T("Od 1 do 100 punktów na kliknięcie. Rozdaj je w zwykłym panelu postaci. Poziom i XP pozostają bez zmian; nadal obowiązują limity umiejętności gry."), _smallStyle);
             DrawAvailability(_pointsReady);
         }
 
@@ -546,14 +583,14 @@ namespace Puchatek.FlotsamPlus
             if (!_pointsReady) return;
             if (!int.TryParse(_pointAmount, out int amount) || amount < 1 || amount > PointGrant.Maximum)
             {
-                _residentMessage = "Wpisz od 1 do 100 punktów.";
+                _residentMessage = M("Wpisz od 1 do 100 punktów.");
                 return;
             }
             try
             {
                 int total = ResidentTools.AddPoints(_selectedResident, _community, amount);
-                _residentMessage = "Dodano " + amount + " punktów dla: " + _selectedResident.Name +
-                    ". Do rozdania: " + total + ".";
+                _residentMessage = M("Dodano {0} punktów dla: {1}. Do rozdania: {2}.", amount,
+                    _selectedResident.Name, total);
             }
             catch (Exception error)
             {
@@ -564,22 +601,21 @@ namespace Puchatek.FlotsamPlus
 
         private void DrawMap()
         {
-            GUILayout.Label("Odkrywanie mapy", _headerStyle);
-            GUILayout.Label("Odsłania mgłę i istniejące miejsca we wszystkich wygenerowanych częściach bieżącego świata.",
+            GUILayout.Label(T("Odkrywanie mapy"), _headerStyle);
+            GUILayout.Label(T("Odsłania mgłę i istniejące miejsca we wszystkich wygenerowanych częściach bieżącego świata."),
                 _smallStyle);
             GUILayout.Space(8);
             GUI.enabled = _mapReady && IsPlayer(_community) && GameManager.WorldManager != null &&
                 GameManager.WorldManager.World != null;
-            if (GUILayout.Button("Odkryj całą dostępną mapę", GUILayout.Height(34))) RevealMap(false);
+            if (GUILayout.Button(T("Odkryj całą dostępną mapę"), GUILayout.Height(34))) RevealMap(false);
             GUI.enabled = true;
-            if (DrawToggle(AutoReveal, " Automatycznie odkrywaj także nowe obszary", _mapReady))
+            if (DrawToggle(AutoReveal, T(" Automatycznie odkrywaj także nowe obszary"), _mapReady))
                 _nextMapReveal = 0;
             GUILayout.Space(10);
-            GUILayout.Box(_mapMessage, _messageStyle, GUILayout.MinHeight(50));
-            GUILayout.Label("Świat powstaje etapami. Automatyczne odkrywanie obejmie kolejne obszary, " +
-                "gdy pojawią się podczas podróży. Zablokowane miejsca fabularne pozostają pod kontrolą gry.", _smallStyle);
+            GUILayout.Box(_mapMessage.ToString(), _messageStyle, GUILayout.MinHeight(50));
+            GUILayout.Label(T("Świat powstaje etapami. Automatyczne odkrywanie obejmie kolejne obszary, gdy pojawią się podczas podróży. Zablokowane miejsca fabularne pozostają pod kontrolą gry."), _smallStyle);
             GUILayout.Space(8);
-            GUILayout.Label("Odkryte miejsca i dodane punkty umiejętności zostają w zapisie. Wyłączenie opcji ani reset ich nie cofa.",
+            GUILayout.Label(T("Odkryte miejsca i dodane punkty umiejętności zostają w zapisie. Wyłączenie opcji ani reset ich nie cofa."),
                 _smallStyle);
             DrawAvailability(_mapReady);
         }
@@ -590,7 +626,7 @@ namespace Puchatek.FlotsamPlus
             try
             {
                 if (GameManager.WorldManager == null || GameManager.WorldManager.World == null)
-                    throw new InvalidOperationException("Najpierw wczytaj zapis gry.");
+                    throw new InvalidOperationException(T("Najpierw wczytaj zapis gry."));
                 _mapMessage = MapTools.Reveal(GameManager.WorldManager.World);
             }
             catch (Exception error)
@@ -603,18 +639,17 @@ namespace Puchatek.FlotsamPlus
 
         private void DrawBuildingAndResearch()
         {
-            GUILayout.Label("Budowa", _headerStyle);
-            DrawToggle(InstantBuild, " Natychmiastowa budowa i ulepszenia bez surowców", BuildingReady);
-            GUILayout.Label("Dotyczy nowych budynków, dekoracji, łodzi i rozpoczynanych ulepszeń. " +
-                "Już istniejące place budowy kończą pracę normalnie.", _smallStyle);
+            GUILayout.Label(T("Budowa"), _headerStyle);
+            DrawToggle(InstantBuild, T(" Natychmiastowa budowa i ulepszenia bez surowców"), BuildingReady);
+            GUILayout.Label(T("Dotyczy nowych budynków, dekoracji, łodzi i rozpoczynanych ulepszeń. Już istniejące place budowy kończą pracę normalnie."), _smallStyle);
             GUILayout.Space(12);
-            GUILayout.Label("Badania", _headerStyle);
-            DrawMultiplier(ResearchSpeed, "Szybkość badań", 100f, ResearchReady);
-            GUILayout.Label("Przyspiesza pracę naukowców. Nadal potrzebne są punkty badań i aktywna stacja.",
+            GUILayout.Label(T("Badania"), _headerStyle);
+            DrawMultiplier(ResearchSpeed, T("Szybkość badań"), 100f, ResearchReady);
+            GUILayout.Label(T("Przyspiesza pracę naukowców. Nadal potrzebne są punkty badań i aktywna stacja."),
                 _smallStyle);
             DrawAvailability(BuildingReady && ResearchReady);
             GUILayout.Space(16);
-            if (GUILayout.Button("Wyłącz wszystkie ułatwienia i przywróć mnożniki ×1", GUILayout.Height(30)))
+            if (GUILayout.Button(T("Wyłącz wszystkie ułatwienia i przywróć mnożniki ×1"), GUILayout.Height(30)))
             {
                 ResetShipSettings();
                 NoHunger.Value = NoThirst.Value = NoRest.Value = InstantBuild.Value = false;
@@ -623,7 +658,7 @@ namespace Puchatek.FlotsamPlus
                 AutoReveal.Value = false;
                 ResidentTools.RefreshNavMeshes(_community);
             }
-            GUILayout.Label("Reset nie cofa dodanych surowców i punktów umiejętności, odkrytej mapy, ukończonych budynków ani badań.",
+            GUILayout.Label(T("Reset nie cofa dodanych surowców i punktów umiejętności, odkrytej mapy, ukończonych budynków ani badań."),
                 _smallStyle);
         }
 
@@ -641,7 +676,7 @@ namespace Puchatek.FlotsamPlus
         {
             float current = Tuning.Multiplier(setting.Value, maximum);
             GUILayout.Space(5);
-            GUILayout.Label(label + ": ×" + current.ToString("0.0", CultureInfo.CurrentCulture), _smallStyle);
+            GUILayout.Label(label + ": ×" + current.ToString("0.0", I18n.Culture), _smallStyle);
             GUI.enabled = ready;
             float value = GUILayout.HorizontalSlider(current, 1f, maximum);
             value = Mathf.Round(value * 10f) / 10f;
@@ -657,31 +692,31 @@ namespace Puchatek.FlotsamPlus
         private void DrawAvailability(bool ready)
         {
             if (!ready)
-                GUILayout.Label("Część opcji nie uruchomiła się. Szczegóły w BepInEx/LogOutput.log.", _smallStyle);
+                GUILayout.Label(T("Część opcji nie uruchomiła się. Szczegóły w BepInEx/LogOutput.log."), _smallStyle);
         }
 
         private void DrawResources()
         {
             GUILayout.Space(8);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Dodawanie surowców", _headerStyle);
+            GUILayout.Label(T("Dodawanie surowców"), _headerStyle);
             GUI.enabled = _community != null;
-            if (GUILayout.Button("Odśwież", GUILayout.Width(80))) RefreshItems();
+            if (GUILayout.Button(T("Odśwież"), GUILayout.Width(80))) RefreshItems();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
             if (_community == null)
             {
-                GUILayout.Box("Wczytaj zapis lub rozpocznij grę, aby dodać surowce.", _messageStyle,
+                GUILayout.Box(T("Wczytaj zapis lub rozpocznij grę, aby dodać surowce."), _messageStyle,
                     GUILayout.ExpandHeight(true));
                 return;
             }
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Szukaj:", GUILayout.Width(46));
+            GUILayout.Label(T("Szukaj:"), GUILayout.Width(46));
             string search = GUILayout.TextField(_search);
             if (search != _search) { _search = search; Refilter(); }
             if (GUILayout.Button("×", GUILayout.Width(26))) { _search = ""; Refilter(); }
             GUILayout.EndHorizontal();
-            GUILayout.Label("Przedmioty: " + _filtered.Count + " / " + _items.Count, _smallStyle);
+            GUILayout.Label(F("Przedmioty: {0} / {1}", _filtered.Count, _items.Count), _smallStyle);
             _scroll = GUILayout.BeginScrollView(_scroll, GUI.skin.box, GUILayout.ExpandHeight(true));
             foreach (ResourceEntry entry in _filtered)
             {
@@ -695,32 +730,34 @@ namespace Puchatek.FlotsamPlus
                 }
                 GUI.backgroundColor = before;
             }
-            if (_filtered.Count == 0) GUILayout.Label("Brak pasujących przedmiotów.");
+            if (_filtered.Count == 0) GUILayout.Label(T("Brak pasujących przedmiotów."));
             GUILayout.EndScrollView();
-            GUILayout.Label(_selected == null ? "Wybierz przedmiot z listy."
-                : "Wybrano: " + _selected.Name + "  |  W magazynach: " + _selectedCount, _smallStyle);
+            GUILayout.Label(_selected == null ? T("Wybierz przedmiot z listy.")
+                : F("Wybrano: {0}  |  W magazynach: {1}", _selected.Name, _selectedCount), _smallStyle);
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Ilość:", GUILayout.Width(40));
+            GUILayout.Label(T("Ilość:"), GUILayout.Width(62));
             _amount = GUILayout.TextField(_amount, 5, GUILayout.Width(65));
             foreach (int preset in new[] { 1, 10, 100, 1000 })
                 if (GUILayout.Button(preset.ToString(), GUILayout.Width(49))) _amount = preset.ToString();
             GUILayout.FlexibleSpace();
             bool running = _batch != null && !_batch.Finished;
             GUI.enabled = _selected != null && !running;
-            if (GUILayout.Button("Dodaj", GUILayout.Width(76), GUILayout.Height(28))) BeginBatch();
+            if (GUILayout.Button(T("Dodaj"), GUILayout.Width(76), GUILayout.Height(28))) BeginBatch();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
-            GUILayout.Box(_message, _messageStyle, GUILayout.MinHeight(48));
-            if (running && GUILayout.Button("Przerwij dodawanie"))
+            GUILayout.Box(_message.ToString(), _messageStyle, GUILayout.MinHeight(48));
+            if (running && GUILayout.Button(T("Przerwij dodawanie")))
             {
                 _batch.Cancel("Dodawanie przerwane przez użytkownika.");
                 UpdateBatchMessage();
             }
-            GUILayout.Label("Limit jednej operacji: 5000. Surowce trafiają do pasujących magazynów z wolnym miejscem.", _smallStyle);
+            GUILayout.Label(T("Limit jednej operacji: 5000. Surowce trafiają do pasujących magazynów z wolnym miejscem."), _smallStyle);
+            GUILayout.Label(T("Nazwy surowców i kategorii pochodzą z języka gry."), _smallStyle);
         }
 
         private void OnDestroy()
         {
+            CapacityReady = false;
             ResidentsReady = false;
             try { ResidentTools.RefreshNavMeshes(_community); }
             catch (Exception error) { Logger.LogError("Nie przywrócono szybkości nawigacji: " + error); }

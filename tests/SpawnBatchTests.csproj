@@ -10,6 +10,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="TuningChecks.cs" />
     <Compile Include="PointGrantChecks.cs" />
+    <Compile Include="LocalizationCapacityChecks.cs" />
+    <Compile Include="../src/Localization.cs" Link="Localization.cs" />
+    <Compile Include="../src/WeightCapacity.cs" Link="WeightCapacity.cs" />
     <Compile Include="../src/PointGrant.cs" Link="PointGrant.cs" />
     <Compile Include="../src/SpawnBatch.cs" Link="SpawnBatch.cs" />
     <Compile Include="../src/Tuning.cs" Link="Tuning.cs" />

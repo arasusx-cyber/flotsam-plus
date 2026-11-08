@@ -1,62 +1,58 @@
 # Flotsam Plus
 
-Polskie menu **F8**: ustawienia statku, mieszkańcy i punkty umiejętności, odkrywanie mapy, szybkie budowanie, badania i surowce.
+Menu **F8 po polsku i angielsku**: udźwig i sterowanie statkiem, mieszkańcy, punkty umiejętności, mapa, budowanie, badania i surowce.
 
-**[⬇ Pobierz Flotsam Plus 1.2.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.2.0.zip)** · [English](README.en.md) · [Instrukcja](docs/INSTALL_PL.md)
+**[⬇ Pobierz Flotsam Plus 1.3.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.3.0.zip)** · [English](README.en.md) · [Instrukcja](docs/INSTALL_PL.md)
 
-Windows x64 · BepInEx 5.4.x · Wersja 1.2.0
+Windows x64 · BepInEx 5.4.x · Wersja 1.3.0
 
-**Działanie 1.2.0 potwierdzone w grze przez użytkownika 8 listopada 2026.**
+## Nowe w 1.3.0
+
+- **PL / EN:** zmiana języka w górnej części menu, bez restartu. Tłumaczone są zakładki, przyciski, opisy i komunikaty. Wybór jest zapamiętywany.
+- **Udźwig osady ×1–×100:** zwiększa limit wagi, który blokuje rozbudowę.
+- **Wyłącz limit wagi osady:** pozwala budować mimo przekroczonej wagi. Włącz w **F8 → Statek**.
+
+Mnożnik i wyłączenie limitu dotyczą wagi całej osady. Pojemność magazynów i zwykłe reguły stawiania budynków pozostają osobnymi warunkami. Nazwy przedmiotów i kategorii są pobierane z języka gry. Język menu nie zmienia języka Flotsam.
 
 ## Funkcje
 
 | Zakładka | Opcje |
 |---|---|
-| Statek | Prędkość podróży ×1–×5, zwrotność ×1–×5, przyspieszenie i hamowanie ×1–×5, podróż bez zużywania energii |
-| Mieszkańcy | Osobne przełączniki głodu, pragnienia i nocnego snu; ruch ×1–×5; dodawanie punktów do rozdania wybranej postaci |
+| Statek | Udźwig ×1–×100 lub bez limitu wagi; prędkość podróży, zwrotność, przyspieszenie i hamowanie ×1–×5; podróż bez energii |
+| Mieszkańcy | Głód, pragnienie i nocny sen; ruch ×1–×5; dodawanie 1–100 punktów do rozdania wybranej postaci |
 | Budowa i badania | Natychmiastowe nowe budowy i ulepszenia bez surowców; badania ×1–×100 |
-| Surowce | Wyszukiwarka przedmiotów i dodawanie 1–5000 sztuk do pasujących magazynów |
-| Mapa | Odkrycie całej dostępnej mapy oraz automatyczne odsłanianie nowych obszarów |
+| Surowce | Wyszukiwarka i dodawanie 1–5000 sztuk do pasujących magazynów z wolnym miejscem |
+| Mapa | Odkrycie dostępnej mapy i automatyczne odsłanianie nowych wygenerowanych obszarów |
 
-Suwaki są niezależne. Przycisk przywraca normalne ustawienia statku; drugi reset wyłącza wszystkie ułatwienia. Ustawienia są zapamiętywane. Nowe opcje początkowo są wyłączone lub ustawione na ×1; wcześniejsze ustawienia głodu i pragnienia zostają zachowane.
+Ustawienia są zapamiętywane. Nowe ułatwienia zaczynają wyłączone lub na ×1. Aktualizacja zachowuje dotychczasową konfigurację. Reset statku przywraca też zwykły udźwig; pełny reset wyłącza wszystkie ułatwienia i zachowuje język.
 
-Prędkość i skręt obejmują sterowanie ręczne oraz podróż po trasie. Przyspieszenie zmienia reakcję w trybie fizycznego napędu; bezpośredni ruch bez bezwładności nie wymaga rozpędzania. Hamowanie ogranicza dryf po puszczeniu sterowania.
+Prędkość i skręt obejmują sterowanie ręczne i trasę. Przyspieszenie dotyczy fizycznego napędu, a hamowanie ogranicza dryf po puszczeniu sterowania. Badania nadal wymagają punktów i stacji. Istniejące place budowy i rozpoczęty wcześniej sen kończą zadania normalnie.
 
-Badania nadal wymagają punktów i stacji. Rozpoczęty wcześniej sen kończy się normalnie. Istniejące place budowy zachowują swoje zadania; opcja natychmiastowej budowy obejmuje nowe zlecenia.
+Punkty są do rozdania w zwykłym panelu postaci; poziom, XP i limity umiejętności pozostają bez zmian. Mapa obejmuje wygenerowane części świata i nie uruchamia zablokowanych miejsc fabularnych. Dodane zasoby i punkty, ukończona budowa oraz odkrycia zostają w zapisie.
 
-## Nowe w 1.2.0
-
-- **Mieszkańcy:** niezależny suwak chodzenia i pływania ×1–×5, także na wyspach.
-- **Punkty umiejętności:** wybierz mieszkańca z listy i dodaj 1–100 punktów na kliknięcie. Rozdaj je w normalnym panelu postaci. Poziom, XP i limity umiejętności pozostają bez zmian.
-- **Mapa:** odkryj wygenerowane części świata. Automatyczna opcja odkrywa też nowe obszary podczas podróży. Świat powstaje etapami; przyszłe biomy i zablokowane miejsca fabularne zachowują zasady gry.
-
-Dodane punkty i odkrycia zostają w zapisie. Reset wyłącza opcje i przywraca mnożniki ×1; nie cofa wykonanych zmian.
-
-## Aktualizacja z 1.0.0 / 1.1.0
+## Aktualizacja / instalacja
 
 1. Zamknij grę.
 2. Wypakuj folder `BepInEx` z nowego ZIP-a do katalogu z `Flotsam.exe` i **nadpisz dotychczasową DLL**.
-3. Wczytaj zapis i naciśnij **F8**.
+3. Wczytaj zapis i naciśnij **F8**. Język zmienisz przyciskami **PL / EN**; limit wagi w zakładce **Statek**.
 
 ```text
 BepInEx/plugins/FlotsamPuchatekPlus/FlotsamPuchatekPlus.dll
 ```
 
-Nie zostawiaj drugiej kopii tego samego pluginu pod inną nazwą. Przy pierwszej instalacji potrzebny jest [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21).
+Nie zostawiaj drugiej kopii pluginu pod inną nazwą. Pierwsza instalacja wymaga [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21). Starszy trainer Hansjoy może nadal działać pod F9.
 
 ## Menu w grze
 
 ![Menu Flotsam Plus 1.2.0 w grze](docs/images/menu-1.2.0.png)
 
-*Menu F8 Flotsam Plus 1.2.0 — zrzut przekazany przez użytkownika po potwierdzeniu działania moda.*
+*Zrzut użytkownika z działającej wersji 1.2.0. W 1.3.0 dodano wybór PL/EN i ustawienia udźwigu.*
 
-## Sprawdzenie wersji 1.2.0
+## Sprawdzenie wersji
 
-Kompilacja: 0 błędów i 0 ostrzeżeń. Przeszło 27 testów kolejki/mnożników/punktów oraz 68 kontroli API i kodu IL względem dostarczonej DLL Flotsam. **Użytkownik potwierdził działanie wersji 1.2.0 w uruchomionej grze 8 listopada 2026.**
+1.3.0: kompilacja bez błędów i ostrzeżeń, 43 testy logiki oraz 82 kontrole API/IL względem dostarczonej DLL gry. **Nowe opcje 1.3.0 wymagają jeszcze potwierdzenia w uruchomionej grze.**
 
-[Poprzednia paczka 1.1.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.1.0.zip) — działanie potwierdzone przez użytkownika 8 listopada 2026.
-
-[Paczka 1.0.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.0.0.zip) pozostaje dostępna; użytkownik potwierdził działanie tej wersji.
+Działanie poprzedniej **1.2.0** użytkownik potwierdził 8 listopada 2026. [Pobierz 1.2.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.2.0.zip). Starsze paczki 1.0.0 i 1.1.0 również pozostają w repozytorium.
 
 [Obsługa i diagnoza](docs/INSTALL_PL.md) · [Rozwój i kompilacja](docs/DEVELOPMENT.md) · [Historia zmian](CHANGELOG.md)
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.0 — 2026-11-08
+
+- Live PL/EN menu selector with a saved language preference.
+- Translate all tabs, controls, help and status messages, including earlier operation results.
+- Town weight-capacity multiplier ×1–×100 and a separate unlimited-weight switch.
+- Recompute capacity from native engine values; unlimited mode bypasses only the weight comparison and keeps finite UI values.
+- Ship and full reset restore native capacity; language and all existing config keys remain compatible.
+- Preserve normal storage capacities, item filters, actual town weight and other placement requirements.
+- Include standalone English installation instructions in the ZIP.
+- 43 logic checks and 82 game API/IL checks; build without errors or warnings. New gameplay awaits user confirmation.
+
 ## 1.2.0 — 2026-11-08
 
 - Reveal the entire currently generated map, with optional automatic discovery of later world tiles.

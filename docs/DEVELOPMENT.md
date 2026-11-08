@@ -19,9 +19,9 @@ Alternatywne ścieżki referencji: `GameManagedDir`, `UnityManagedDir`, `BepInEx
 ## Co sprawdza build.py
 
 1. Obecność bibliotek, w tym UnityEngine.Physics2DModule.
-2. 27 testów kolejki, mnożników, przywracania wartości i przyznawania punktów.
+2. 43 testy kolejki, mnożników, przywracania wartości, punktów, języków i udźwigu.
 3. Kompilację pluginu.
-4. 68 kontroli API/IL względem lokalnej DLL gry i zbudowanego pluginu.
+4. 82 kontrole API/IL względem lokalnej DLL gry i zbudowanego pluginu.
 5. SHA-256 źródeł, DLL i zawartości ZIP-a.
 
 ```shell
@@ -42,7 +42,10 @@ Kontrola korzysta z Mono.Cecil jako czytnika metadanych; nie uruchamia gry. Spra
 
 | Plik | Rola |
 |---|---|
-| Plugin.cs | Konfiguracja, pięć zakładek, wybór mieszkańca, zasoby i obsługa potrzeb |
+| Plugin.cs | Konfiguracja, przełącznik PL/EN, pięć zakładek, udźwig, mieszkańcy i zasoby |
+| Localization.cs | 92 pary tłumaczeń; leniwe formatowanie komunikatów i kultura liczb |
+| WeightCapacity.cs | Mnożnik udźwigu i skończone wartości bez przepełnienia |
+| WeightPatches.cs | Wynik ReturnTownTugCapacity i sama kontrola wagi w CanTug |
 | GameplayPatches.cs | Prędkość/skręt obu ścieżek ruchu, energia, budowa, badania i nocny sen |
 | ShipPhysics.cs | Przyspieszenie, tłumienie ruchu i przywracanie przechwyconych wartości |
 | Tuning.cs | Ograniczenia mnożników i obsługa własności nadpisanych wartości |
@@ -72,6 +75,16 @@ Punkty są dodawane do prywatnego pola SpendablePoints konkretnego DrifterAttrib
 Mapa podnosi ScoutingState istniejących, aktywnych spawnerów do Scouted. Nie wywołuje Region.Scout, StartQuest ani generowania następnych części świata; nie ustawia flag wykonania zwiadu. Zablokowane spawners fabularne są pomijane. Kolory siatki mgły są zerowane w tej samej tablicy _colors, którą czyta natywne ReturnAlphas przy zapisie. Operacja obejmuje tylko instancje mgły należące do części bieżącego świata. Automatyczna opcja ponawia odkrywanie raz na sekundę, również po inicjalizacji nowych siatek.
 
 Kontrole automatyczne nie uruchamiają gry. Użytkownik potwierdził działanie wydania 1.2.0 8 listopada 2026. Przy kolejnych zmianach sprawdzać menu, chód/pływanie/wyspy, rozdanie punktów, zapis i ponowne wczytanie oraz odkrywanie nowego obszaru podczas podróży.
+
+## Język i udźwig w 1.3.0
+
+`Menu.Jezyk` przechowuje enum `Polski`/`English`. Dotychczasowe sekcje i klucze konfiguracji pozostają identyczne; nie są tłumaczone. Komunikaty przechowują klucz źródłowy i argumenty zamiast gotowego tekstu. Dzięki temu przełączenie języka zmienia także istniejący wynik dodawania punktów, odkrywania mapy i zakończonej kolejki zasobów. Nazwy przedmiotów i kategorii są nadal pobierane z natywnej lokalizacji gry. Testy sprawdzają zgodność argumentów obu katalogów i zmianę języka gotowych wyników; verify_repo.py sprawdza użyte klucze.
+
+`Statek.Udzwig` jest mnożnikiem ×1–×100, a `Statek.BezLimituWagi` niezależnym przełącznikiem. Postfix `Engine.ReturnTownTugCapacity` skaluje wyłącznie świeżo obliczony wynik silnika osady gracza. Natywne `LateUpdate` odświeża cache, wolny udźwig, procent wagi i zdarzenia. Nie zmieniamy assetów silników, rzeczywistej wagi osady ani pojemności magazynów.
+
+Tryb bez limitu pozostawia skończony zapas udźwigu co najmniej 1e9 dla natywnego licznika i omija samą kontrolę wagi w `Engine.CanTug`. Prefix wymaga istniejącego silnika osady gracza i poprawnie uruchomionej grupy patchy. Pozostałe wymagania w konstruktorach i podglądzie stawiania wykonuje gra. Skończone nasycanie obliczeń zapobiega Infinity/NaN. Zmiana mnożnika, reset i wyłączenie grupy uwzględniane są przy najbliższym natywnym przeliczeniu; wartości nie narastają między klatkami.
+
+1.3.0: 43 testy logiki i 82 kontrole API/IL, kompilacja bez błędów i ostrzeżeń. Działanie nowych opcji w uruchomionej grze wymaga potwierdzenia użytkownika.
 
 ## Zgodność 1.2.0
 

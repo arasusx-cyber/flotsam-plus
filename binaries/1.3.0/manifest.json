@@ -1,0 +1,30 @@
+{
+  "version": "1.3.0",
+  "binary": "FlotsamPuchatekPlus.dll",
+  "binary_sha256": "638f43d650cfe40011f8aa70aa7a5cb8e3c339d10b52cf078b962251a2a56f68",
+  "source_sha256": {
+    "src/FlotsamPlus.csproj": "6e2dc9f510e13c20ebe18c386ff94409d3f214041de2b7ec6530acc7e76f9a99",
+    "src/GameplayPatches.cs": "fdd367863f85da0517c0e0d463ff818399321705ea4d18ff39cc5ae9c28a0c19",
+    "src/Localization.cs": "b1a3c96e247359ee52fee57a66804e8e00d0a4e305c5d13c5bee51182e270594",
+    "src/MapTools.cs": "d1a2ebe7308041f794db5026b13860d50742943a7091f84d8a8e2625f1a5c266",
+    "src/Plugin.cs": "fd8ed9daa7f0008736ee0fb1131fe300e2f3a083f916bc9d09c3a9c52ba097ba",
+    "src/PointGrant.cs": "a5d7aa409e9515ce1187a75ee676b191c5762bc6ba2e6070be001d7a341313c9",
+    "src/ResidentTools.cs": "cc4591c59d9f96caaa048a0f3bc2a0865fdb95b902f78631a6ca319e4098a8b1",
+    "src/ShipPhysics.cs": "e9ec036f689fc504955e80cc907f4a588bf98af772fcecd8e2a1fc91b3bf2e2c",
+    "src/SpawnBatch.cs": "133325944bb32ce3c57cbd056ad3e82d728f35138d443c221342976cc745a93a",
+    "src/Tuning.cs": "19be74e9c89e2fe6ace72454a96c0e495db4f6800864570132ce3c90bcf5cdd2",
+    "src/WeightCapacity.cs": "6713da6a85f5930451ab7cc649409db761a5cad2b25ea95e4010d52a516182d1",
+    "src/WeightPatches.cs": "2f8a4d716760a7bd5fa740f4d75ead0058fd2df04cfdca0995756b5a18bd318f"
+  },
+  "build_info": {
+    "method": "Local build using scripts/build.py",
+    "game_assembly_sha256": "5b5c9f730ed71d5f66c0267064fc57667d2ff5644a018e9189b140ce025c1cd8",
+    "target_framework": "netstandard2.1",
+    "logic_checks": 43,
+    "localization": "PL/EN captions and live messages; format arguments validated.",
+    "town_capacity": "Native recomputation and player-scoped weight gate checked; not gameplay.",
+    "game_api_checks": "Passed against the supplied game assembly; not a gameplay test.",
+    "unity_reference_api": "UnityEngine.Modules 2021.3.33; runtime damping names support Unity 6.",
+    "gameplay_test": "Not performed by this script; test the new DLL in the game."
+  }
+}
