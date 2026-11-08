@@ -1,23 +1,30 @@
 # Flotsam Plus
 
-A Polish **F8** menu for ship handling, needs, construction, research and resources.
+A Polish **F8** menu for ship handling, residents, skill points, map discovery, construction, research and resources.
 
-**[⬇ Download Flotsam Plus 1.1.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.1.0.zip)** · [Polski](README.md)
+**[⬇ Download Flotsam Plus 1.2.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.2.0.zip)** · [Polski](README.md)
 
-Windows x64 · BepInEx 5.4.x · Version 1.1.0
+Windows x64 · BepInEx 5.4.x · Version 1.2.0
 
 | Tab | Features |
 |---|---|
 | Ship | Independent travel speed, turning, acceleration and braking multipliers ×1–×5; energy-free travel |
-| Residents | Independent hunger, thirst and nighttime sleep switches |
+| Residents | Independent hunger, thirst and nighttime sleep switches; movement ×1–×5; grant unspent skill points to a selected resident |
 | Construction and research | Instant new construction/upgrades without materials; research speed ×1–×100 |
 | Resources | Search items and insert 1–5000 into compatible storage with available capacity |
+| Map | Reveal the available map and optionally keep revealing newly generated areas |
 
 Ship reset restores vanilla multipliers and travel energy use. A separate reset disables all conveniences. Existing hunger/thirst settings are preserved; new switches start disabled and multipliers at ×1.
 
 Speed and turning cover manual movement and route travel. Acceleration changes force-based movement; direct movement modes have no acceleration phase. Braking reduces coasting after releasing movement controls.
 
 Research still requires points and a station. Sleep already in progress finishes normally. Existing construction jobs are not forcibly completed.
+
+## New in 1.2.0
+
+Resident speed covers walking, swimming and island navigation. Select a living resident to grant 1–100 unspent skill points per click, then spend them through the normal character panel. XP, levels and native skill caps are preserved.
+
+Map reveal covers all currently generated world tiles. Automatic reveal also handles areas generated later during travel. It does not generate future biomes or activate disabled narrative locations. Discovery and granted points persist in the save; resetting settings does not undo them.
 
 ## Update / install
 
@@ -31,9 +38,9 @@ Load a save and press **F8**. Do not keep duplicate copies of this plugin. First
 
 ## Validation
 
-Version 1.1.0 builds with zero errors/warnings and passes 21 resource/tuning/reset checks plus 43 game API/IL checks against the supplied game assembly. **The new version has not yet been tested in a running game.**
+Version 1.2.0 builds with zero errors/warnings and passes 27 resource/tuning/skill-point checks plus 68 game API/IL checks against the supplied game assembly. **The new version has not yet been tested in a running game.**
 
-The previous [1.0.0 package](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.0.0.zip) remains available.
+The previous [1.1.0 package](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.1.0.zip) was confirmed working in-game by the user on 8 November 2026. The [1.0.0 package](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.0.0.zip) remains available.
 
 [Installation details (PL)](docs/INSTALL_PL.md) · [Development (PL)](docs/DEVELOPMENT.md) · [Changelog](CHANGELOG.md)
 
