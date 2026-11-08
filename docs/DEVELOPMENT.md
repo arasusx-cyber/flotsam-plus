@@ -19,9 +19,9 @@ Alternatywne ścieżki referencji: `GameManagedDir`, `UnityManagedDir`, `BepInEx
 ## Co sprawdza build.py
 
 1. Obecność bibliotek, w tym UnityEngine.Physics2DModule.
-2. 43 testy kolejki, mnożników, przywracania wartości, punktów, języków i udźwigu.
+2. 58 testów kolejki, mnożników, punktów, języków, udźwigu, układu, kontrastu i przechwytywania wejścia.
 3. Kompilację pluginu.
-4. 82 kontrole API/IL względem lokalnej DLL gry i zbudowanego pluginu.
+4. 92 kontrole API/IL względem lokalnej DLL gry i zbudowanego pluginu.
 5. SHA-256 źródeł, DLL i zawartości ZIP-a.
 
 ```shell
@@ -43,7 +43,11 @@ Kontrola korzysta z Mono.Cecil jako czytnika metadanych; nie uruchamia gry. Spra
 | Plik | Rola |
 |---|---|
 | Plugin.cs | Konfiguracja, przełącznik PL/EN, pięć zakładek, udźwig, mieszkańcy i zasoby |
-| Localization.cs | 92 pary tłumaczeń; leniwe formatowanie komunikatów i kultura liczb |
+| WindowUi.cs | Konfiguracja wyglądu, zakładka Okno, prostokąty przewijanej zawartości, zmiana rozmiaru i reset |
+| WindowLayout.cs | Projekcja okna na ekran, układ przycisków, kolory i polityka przechwytywania wejścia |
+| WindowAppearance.cs | Własny GUISkin i sześć tekstur 1×1; odświeżanie i sprzątanie |
+| MenuAxisInputPatch.cs | Neutralizuje osie i zoom gry podczas obsługi menu |
+| Localization.cs | 118 par tłumaczeń; leniwe formatowanie komunikatów i kultura liczb |
 | WeightCapacity.cs | Mnożnik udźwigu i skończone wartości bez przepełnienia |
 | WeightPatches.cs | Wynik ReturnTownTugCapacity i sama kontrola wagi w CanTug |
 | GameplayPatches.cs | Prędkość/skręt obu ścieżek ruchu, energia, budowa, badania i nocny sen |
@@ -75,6 +79,18 @@ Punkty są dodawane do prywatnego pola SpendablePoints konkretnego DrifterAttrib
 Mapa podnosi ScoutingState istniejących, aktywnych spawnerów do Scouted. Nie wywołuje Region.Scout, StartQuest ani generowania następnych części świata; nie ustawia flag wykonania zwiadu. Zablokowane spawners fabularne są pomijane. Kolory siatki mgły są zerowane w tej samej tablicy _colors, którą czyta natywne ReturnAlphas przy zapisie. Operacja obejmuje tylko instancje mgły należące do części bieżącego świata. Automatyczna opcja ponawia odkrywanie raz na sekundę, również po inicjalizacji nowych siatek.
 
 Kontrole automatyczne nie uruchamiają gry. Użytkownik potwierdził działanie wydania 1.2.0 8 listopada 2026. Przy kolejnych zmianach sprawdzać menu, chód/pływanie/wyspy, rozdanie punktów, zapis i ponowne wczytanie oraz odkrywanie nowego obszaru podczas podróży.
+
+## Wygląd okna w 1.4.0
+
+Nowa część partial Plugin mieści UI w WindowUi.cs. Okno ma prywatny GUISkin i sześć ponownie używanych tekstur 1×1; sam panel dostaje ustawione alpha, a kontrolki i tekst pozostają nieprzezroczyste. Style/tekstury zmieniają się przy zmianie preferencji. OnDestroy niszczy skórkę i tekstury. OnGUI przywraca poprzednie GUI.skin, matrix, color, backgroundColor, contentColor i enabled w finally.
+
+WindowLayout.Fit projektuje rozmiar i pozycję na aktualny ekran bez nadpisywania większych preferencji użytkownika. Układ stosuje zmianę przy EventType.Layout. Nagłówek i zakładki mają osobne obszary, a zawartość każdej zakładki jest przycięta i przewijana. Przyciski gotowych wartości mieszczą się w siatkach; ilość i akcja są w osobnych rzędach.
+
+Sekcja konfiguracji [Okno] przechowuje Szerokosc, Wysokosc, PozycjaX/Y, KolorTlaR/G/B, NieprzezroczystoscTla i RozmiarTekstu. Zmiany są zapisywane po .4 s bez przeciągania, a także przy zamknięciu i wyłączeniu. Ctrl + klawisz menu przywraca sam wygląd. Reset rozgrywki i reset okna są niezależne.
+
+Przeciąganie rozmiaru korzysta z pozycji myszy względem ekranu i zachowuje przechwycenie do zwolnienia przycisku, także poza oknem. Tekstowe pola moda mają własne nazwy, aby rozpoznawać ich fokus. Kliknięcie poza oknem pozwala wrócić do gry. MenuAxisInputPatch obejmuje GetAxis(int), GetAxisRaw(int), GetCameraZoom() i GetCameraRotation(); getter zoomu musi być osobno objęty, ponieważ czyta Rewired bezpośrednio.
+
+58 testów logiki i 92 kontrole API/IL przechodzi. Testy geometrii/kontrastu i kompilacja nie uruchamiają Unity i nie potwierdzają wyglądu w grze. Do ręcznej kontroli: kolory ciemny/jasny/RGB, alpha 0/50/100%, tekst 12/20 px, mały/duży rozmiar, przeciąganie poza krawędź, zmiana rozdzielczości, Ctrl+F8, zapis/restart i kółko bez zoomowania gry.
 
 ## Język i udźwig w 1.3.0
 
