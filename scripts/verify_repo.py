@@ -14,7 +14,7 @@ def main():
                      ".github/workflows/ci.yml", "tests/TuningChecks.cs",
                      "tests/GameApiChecks.cs", "tests/GameApiChecks.csproj", "tests/Directory.Build.props",
                      "tests/PointGrantChecks.cs", "tests/LocalizationCapacityChecks.cs",
-                     "docs/INSTALL_EN.md"]:
+                     "docs/INSTALL_EN.md", "tests/WindowChecks.cs"]:
             if not (ROOT / name).is_file():
                 raise ValueError("Missing repository file: " + name)
         literal = r'"(?:[^"\\]|\\.)*"'
@@ -32,6 +32,8 @@ def main():
                 raise ValueError("Status keys were translated before rendering: " + path.name)
             keys.update(json.loads(value) for value in re.findall(
                 r"\b(?:T|F|M|ReportError|Cancel)\(\s*(" + literal + r")", text))
+            keys.update(json.loads(value) for value in re.findall(
+                r"\bDraw(?:ColorChannel|WindowDimension)\(ref[^,]+,\s*(" + literal + r")", text))
         missing = sorted(keys - catalog.keys())
         if missing:
             raise ValueError("Missing English translations: " + repr(missing))
