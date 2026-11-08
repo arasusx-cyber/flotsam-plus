@@ -22,7 +22,7 @@ namespace Puchatek.FlotsamPlus
                 throw new InvalidOperationException("Nieznana wersja mapy i mgły wojny.");
         }
 
-        internal static string Reveal(World world)
+        internal static LocalizedMessage Reveal(World world)
         {
             if (world == null || Community.PlayerCommunity == null)
                 throw new InvalidOperationException("Najpierw wczytaj zapis gry.");
@@ -67,8 +67,8 @@ namespace Puchatek.FlotsamPlus
                     // persists this discovery as well as the visible mesh.
                     ++fogs;
                 }
-            return "Odkryto nowe miejsca: " + (landmarks + pointsOfInterest) +
-                ". Odsłonięte fragmenty mapy: " + fogs + ". Dostępne części świata: " + tiles.Count + ".";
+            return I18n.M("Odkryto nowe miejsca: {0}. Odsłonięte fragmenty mapy: {1}. Dostępne części świata: {2}.",
+                landmarks + pointsOfInterest, fogs, tiles.Count);
         }
     }
 }
