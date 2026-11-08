@@ -12,9 +12,9 @@ using static Puchatek.FlotsamPlus.I18n;
 
 namespace Puchatek.FlotsamPlus
 {
-    [BepInPlugin(Guid, "Flotsam Plus", "1.3.0")]
+    [BepInPlugin(Guid, "Flotsam Plus", "1.4.0")]
     [BepInProcess("Flotsam.exe")]
-    public sealed class Plugin : BaseUnityPlugin
+    public sealed partial class Plugin : BaseUnityPlugin
     {
         public const string Guid = "pl.puchatek.flotsam.surowce-potrzeby";
         internal static Plugin Instance;
@@ -47,11 +47,11 @@ namespace Puchatek.FlotsamPlus
         private Harmony _harmony;
         private bool _open;
         private bool _patchesReady;
-        private Rect _window = new Rect(30, 55, 590, 650);
+        private Rect _window = new Rect(0, 0, 760, 780);
         private Vector2 _scroll;
         private Vector2 _settingsScroll;
         private int _tab;
-        private static readonly string[] Tabs = { "Statek", "Mieszkańcy", "Budowa i badania", "Surowce", "Mapa" };
+        private static readonly string[] Tabs = { "Statek", "Mieszkańcy", "Budowa i badania", "Surowce", "Mapa", "Okno" };
         private GUIStyle _headerStyle;
         private GUIStyle _smallStyle;
         private GUIStyle _messageStyle;
@@ -114,13 +114,14 @@ namespace Puchatek.FlotsamPlus
             _language = Config.Bind("Menu", "Jezyk", UiLanguage.Polski,
                 "Menu language: Polski (PL) or English (EN).");
             I18n.Language = _language.Value;
+            InitializeWindowPreferences();
             _menuKey = Config.Bind("Menu", "Klawisz", KeyCode.F8,
                 "Klawisz otwierający i zamykający menu dodatku.");
             _harmony = new Harmony(Guid);
             _patchesReady = PatchGroup("Potrzeby", typeof(HungerThirstIncreasePatch),
                 typeof(LoadedNeedsPatch), typeof(ReserveConsumablesPatch),
                 typeof(StartConsumeProjectPatch), typeof(RetryConsumeProjectPatch));
-            PatchGroup("Menu", typeof(MenuInputPatch));
+            PatchGroup("Menu", typeof(MenuInputPatch), typeof(MenuAxisInputPatch));
             ShipReady = PatchGroup("Prędkość i skręt", typeof(ShipSpeedPatch),
                 typeof(ShipTurningPatch), typeof(PathMovementPatch));
             EnergyReady = PatchGroup("Energia podróży", typeof(TravelEnergyPatch),
@@ -136,7 +137,7 @@ namespace Puchatek.FlotsamPlus
                 typeof(UnlimitedTownWeightPatch));
             _pointsReady = InitializeAction("Punkty umiejętności", ResidentTools.InitializePoints);
             _mapReady = InitializeAction("Odkrywanie mapy", MapTools.Initialize);
-            Logger.LogInfo("Flotsam Plus 1.3.0 ready. Menu: " + _menuKey.Value);
+            Logger.LogInfo("Flotsam Plus 1.4.0 ready. Menu: " + _menuKey.Value);
         }
 
         private bool InitializeAction(string name, Action initialize)
@@ -203,9 +204,12 @@ namespace Puchatek.FlotsamPlus
             I18n.Language = _language.Value;
             if (Input.GetKeyDown(_menuKey.Value))
             {
-                _open = !_open;
+                bool resetWindow = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+                if (resetWindow) { ResetWindowPreferences(); _open = true; }
+                else _open = !_open;
                 if (_open) _nextRefresh = 0;
             }
+            UpdateWindowPreferences();
             Community current = Community.PlayerCommunity;
             if (!ReferenceEquals(current, _community))
             {
@@ -257,9 +261,7 @@ namespace Puchatek.FlotsamPlus
         internal static bool BlockGameplayInput()
         {
             Plugin self = Instance;
-            if (self == null || !self._open) return false;
-            return GUIUtility.keyboardControl != 0 || self._window.Contains(
-                new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
+            return self != null && self.CapturesWindowInput();
         }
 
         private void RefreshItems()
@@ -418,64 +420,6 @@ namespace Puchatek.FlotsamPlus
             _lastError = error.ToString();
         }
 
-        private void OnGUI()
-        {
-            if (!_open) return;
-            if (_headerStyle == null)
-            {
-                _headerStyle = new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold };
-                _smallStyle = new GUIStyle(GUI.skin.label) { fontSize = 12, wordWrap = true };
-                _messageStyle = new GUIStyle(GUI.skin.box) { wordWrap = true, alignment = TextAnchor.MiddleLeft };
-            }
-            _window.width = Mathf.Min(690, Mathf.Max(320, Screen.width - 20));
-            _window.height = Mathf.Min(690, Mathf.Max(310, Screen.height - 30));
-            _window.x = Mathf.Clamp(_window.x, 0, Mathf.Max(0, Screen.width - _window.width));
-            _window.y = Mathf.Clamp(_window.y, 0, Mathf.Max(0, Screen.height - _window.height));
-            bool oldEnabled = GUI.enabled;
-            Color oldColor = GUI.color;
-            try
-            {
-                GUI.enabled = true;
-                GUI.color = Color.white;
-                _window = GUI.Window(7408162, _window, DrawWindow, "Flotsam Plus 1.3.0");
-            }
-            finally { GUI.enabled = oldEnabled; GUI.color = oldColor; }
-        }
-
-
-        private void DrawWindow(int id)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(F("Menu: {0}  |  Poprzedni trainer: F9", _menuKey.Value), _smallStyle);
-            if (GUILayout.Button(T("Zamknij"), GUILayout.Width(78))) _open = false;
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(T("Język:"), GUILayout.Width(65));
-            int currentLanguage = _language.Value == UiLanguage.English ? 1 : 0;
-            int nextLanguage = GUILayout.Toolbar(currentLanguage, new[] { "PL", "EN" }, GUILayout.Width(110));
-            if (nextLanguage != currentLanguage)
-            {
-                _language.Value = nextLanguage == 1 ? UiLanguage.English : UiLanguage.Polski;
-                I18n.Language = _language.Value;
-            }
-            GUILayout.EndHorizontal();
-            int nextTab = GUILayout.Toolbar(_tab, Array.ConvertAll(Tabs, T), GUILayout.Height(30));
-            if (nextTab != _tab) { _tab = nextTab; _settingsScroll = Vector2.zero; }
-            GUILayout.Space(8);
-            if (_tab == 3) DrawResources();
-            else
-            {
-                _settingsScroll = GUILayout.BeginScrollView(_settingsScroll, GUILayout.ExpandHeight(true));
-                if (_tab == 0) DrawShip();
-                else if (_tab == 1) DrawResidents();
-                else if (_tab == 4) DrawMap();
-                else DrawBuildingAndResearch();
-                GUILayout.EndScrollView();
-            }
-            GUI.enabled = true;
-            GUI.DragWindow(new Rect(0, 0, 5000, 20));
-        }
-
         private void DrawShip()
         {
             GUILayout.Label(T("Statek i podróż"), _headerStyle);
@@ -550,13 +494,10 @@ namespace Puchatek.FlotsamPlus
             foreach (Agent resident in _residents)
             {
                 if (!ResidentTools.IsResident(resident, _community) || resident.Attributes == null) continue;
-                Color before = GUI.backgroundColor;
-                if (ReferenceEquals(resident, _selectedResident))
-                    GUI.backgroundColor = new Color(.45f, .85f, .9f);
-                if (GUILayout.Button(F("{0}  |  poziom {1}  |  punkty: {2}", resident.Name, resident.Attributes.Level,
-                    resident.Attributes.SpendablePoints), GUILayout.Height(26)))
-                    _selectedResident = resident;
-                GUI.backgroundColor = before;
+                bool selected = ReferenceEquals(resident, _selectedResident);
+                if (GUILayout.Toggle(selected, F("{0}  |  poziom {1}  |  punkty: {2}", resident.Name,
+                    resident.Attributes.Level, resident.Attributes.SpendablePoints), GUI.skin.button,
+                    GUILayout.MinHeight(MenuFontSize + 12))) _selectedResident = resident;
             }
             if (_residents.Count == 0) GUILayout.Label(T("Brak dostępnych mieszkańców."));
             GUILayout.EndScrollView();
@@ -564,15 +505,10 @@ namespace Puchatek.FlotsamPlus
                 _selectedResident.Attributes != null;
             GUILayout.Label(valid ? F("Wybrano: {0}  |  do rozdania: {1}", _selectedResident.Name,
                 _selectedResident.Attributes.SpendablePoints) : T("Wybierz mieszkańca z listy."), _smallStyle);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(T("Punkty:"), GUILayout.Width(50));
-            _pointAmount = GUILayout.TextField(_pointAmount, 3, GUILayout.Width(45));
-            foreach (int amount in new[] { 1, 5, 10, 50, 100 })
-                if (GUILayout.Button(amount.ToString(), GUILayout.Width(38))) _pointAmount = amount.ToString();
+            DrawQuantity(ref _pointAmount, T("Punkty:"), 3, new[] { 1, 5, 10, 50, 100 });
             GUI.enabled = _pointsReady && valid;
-            if (GUILayout.Button(T("Dodaj punkty"), GUILayout.Height(28))) AddResidentPoints();
+            if (GUILayout.Button(T("Dodaj punkty"), GUILayout.MinHeight(30))) AddResidentPoints();
             GUI.enabled = true;
-            GUILayout.EndHorizontal();
             GUILayout.Box(_residentMessage.ToString(), _messageStyle);
             GUILayout.Label(T("Od 1 do 100 punktów na kliknięcie. Rozdaj je w zwykłym panelu postaci. Poziom i XP pozostają bez zmian; nadal obowiązują limity umiejętności gry."), _smallStyle);
             DrawAvailability(_pointsReady);
@@ -680,11 +616,10 @@ namespace Puchatek.FlotsamPlus
             GUI.enabled = ready;
             float value = GUILayout.HorizontalSlider(current, 1f, maximum);
             value = Mathf.Round(value * 10f) / 10f;
-            GUILayout.BeginHorizontal();
             int[] presets = maximum > 5f ? new[] { 1, 5, 10, 50, 100 } : new[] { 1, 2, 3, 5 };
-            foreach (int preset in presets)
-                if (GUILayout.Button("×" + preset, GUILayout.Width(52))) value = preset;
-            GUILayout.EndHorizontal();
+            int chosen = DrawButtonGrid(Array.ConvertAll(presets, p => "×" + p),
+                MenuFontSize * 3f + 22f);
+            if (chosen >= 0) value = presets[chosen];
             GUI.enabled = true;
             if (ready && value != setting.Value) setting.Value = value;
         }
@@ -707,44 +642,38 @@ namespace Puchatek.FlotsamPlus
             if (_community == null)
             {
                 GUILayout.Box(T("Wczytaj zapis lub rozpocznij grę, aby dodać surowce."), _messageStyle,
-                    GUILayout.ExpandHeight(true));
+                    GUILayout.MinHeight(50));
                 return;
             }
             GUILayout.BeginHorizontal();
-            GUILayout.Label(T("Szukaj:"), GUILayout.Width(46));
+            GUILayout.Label(T("Szukaj:"), GUILayout.Width(MenuFontSize * 5f));
+            GUI.SetNextControlName("FlotsamPlus.Search");
             string search = GUILayout.TextField(_search);
             if (search != _search) { _search = search; Refilter(); }
             if (GUILayout.Button("×", GUILayout.Width(26))) { _search = ""; Refilter(); }
             GUILayout.EndHorizontal();
             GUILayout.Label(F("Przedmioty: {0} / {1}", _filtered.Count, _items.Count), _smallStyle);
-            _scroll = GUILayout.BeginScrollView(_scroll, GUI.skin.box, GUILayout.ExpandHeight(true));
+            _scroll = GUILayout.BeginScrollView(_scroll, GUI.skin.box,
+                GUILayout.Height(Mathf.Clamp(_contentHeight * .48f, 96f, 320f)));
             foreach (ResourceEntry entry in _filtered)
             {
-                Color before = GUI.backgroundColor;
-                if (ReferenceEquals(_selected, entry)) GUI.backgroundColor = new Color(.45f, .85f, .9f);
                 string label = entry.Name + (string.IsNullOrEmpty(entry.Category) ? "" : "  ·  " + entry.Category);
-                if (GUILayout.Button(label, GUILayout.Height(27)))
+                bool selected = ReferenceEquals(_selected, entry);
+                if (GUILayout.Toggle(selected, label, GUI.skin.button, GUILayout.MinHeight(MenuFontSize + 12)) && !selected)
                 {
                     _selected = entry;
                     _nextCountRefresh = 0;
                 }
-                GUI.backgroundColor = before;
             }
             if (_filtered.Count == 0) GUILayout.Label(T("Brak pasujących przedmiotów."));
             GUILayout.EndScrollView();
             GUILayout.Label(_selected == null ? T("Wybierz przedmiot z listy.")
                 : F("Wybrano: {0}  |  W magazynach: {1}", _selected.Name, _selectedCount), _smallStyle);
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(T("Ilość:"), GUILayout.Width(62));
-            _amount = GUILayout.TextField(_amount, 5, GUILayout.Width(65));
-            foreach (int preset in new[] { 1, 10, 100, 1000 })
-                if (GUILayout.Button(preset.ToString(), GUILayout.Width(49))) _amount = preset.ToString();
-            GUILayout.FlexibleSpace();
+            DrawQuantity(ref _amount, T("Ilość:"), 5, new[] { 1, 10, 100, 1000 });
             bool running = _batch != null && !_batch.Finished;
             GUI.enabled = _selected != null && !running;
-            if (GUILayout.Button(T("Dodaj"), GUILayout.Width(76), GUILayout.Height(28))) BeginBatch();
+            if (GUILayout.Button(T("Dodaj"), GUILayout.MinHeight(30))) BeginBatch();
             GUI.enabled = true;
-            GUILayout.EndHorizontal();
             GUILayout.Box(_message.ToString(), _messageStyle, GUILayout.MinHeight(48));
             if (running && GUILayout.Button(T("Przerwij dodawanie")))
             {
@@ -757,6 +686,7 @@ namespace Puchatek.FlotsamPlus
 
         private void OnDestroy()
         {
+            DisposeWindowPreferences();
             CapacityReady = false;
             ResidentsReady = false;
             try { ResidentTools.RefreshNavMeshes(_community); }
