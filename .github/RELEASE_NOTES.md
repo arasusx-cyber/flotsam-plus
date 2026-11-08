@@ -10,4 +10,4 @@ Mapa powstaje etapami. Odkrywanie obejmuje dostępne części świata i nie wymu
 
 Zamknij grę i nadpisz dotychczasową DLL, wypakowując BepInEx z paczki do katalogu z Flotsam.exe. Menu: F8. Nie dodawaj drugiej kopii pluginu.
 
-Przeszło 27 testów logiki i 68 kontroli API/IL. Wersji 1.2.0 nie przetestowano jeszcze w uruchomionej grze. Użytkownik potwierdził działanie 1.1.0.
+Przeszło 27 testów logiki i 68 kontroli API/IL. Użytkownik potwierdził działanie 1.2.0 w uruchomionej grze 8 listopada 2026. Dodano przesłany zrzut menu Flotsam Plus z gry do dokumentacji repozytorium.
