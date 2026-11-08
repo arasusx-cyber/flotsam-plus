@@ -1,0 +1,25 @@
+{
+  "version": "1.2.0",
+  "binary": "FlotsamPuchatekPlus.dll",
+  "binary_sha256": "3510389fa5611b16c9aed01fe33de0bbed3b9446ed91e6b5d094fa19518aa5e5",
+  "source_sha256": {
+    "src/FlotsamPlus.csproj": "0d307fff3a27f425318621f180e849d63e32b8050a5f0ebae979d2b4abeb73f3",
+    "src/GameplayPatches.cs": "fdd367863f85da0517c0e0d463ff818399321705ea4d18ff39cc5ae9c28a0c19",
+    "src/MapTools.cs": "5fe3d2bed30d82281422addd4c2a4e8d0da968d21179555203564344ce3920a2",
+    "src/Plugin.cs": "cb6b8d2aac4848746b892bc01c9b14676a243e9f9a1a7b8ff9beefb96bfa86da",
+    "src/PointGrant.cs": "a5d7aa409e9515ce1187a75ee676b191c5762bc6ba2e6070be001d7a341313c9",
+    "src/ResidentTools.cs": "cc4591c59d9f96caaa048a0f3bc2a0865fdb95b902f78631a6ca319e4098a8b1",
+    "src/ShipPhysics.cs": "e9ec036f689fc504955e80cc907f4a588bf98af772fcecd8e2a1fc91b3bf2e2c",
+    "src/SpawnBatch.cs": "a5e957348a7027e15906b9a663fd648390b0db2fd26c4fb684ba01dcb8085e2f",
+    "src/Tuning.cs": "19be74e9c89e2fe6ace72454a96c0e495db4f6800864570132ce3c90bcf5cdd2"
+  },
+  "build_info": {
+    "method": "Local build using scripts/build.py",
+    "game_assembly_sha256": "5b5c9f730ed71d5f66c0267064fc57667d2ff5644a018e9189b140ce025c1cd8",
+    "target_framework": "netstandard2.1",
+    "queue_tuning_and_point_checks": 27,
+    "game_api_checks": "Passed against the supplied game assembly; not a gameplay test.",
+    "unity_reference_api": "UnityEngine.Modules 2021.3.33; runtime damping names support Unity 6.",
+    "gameplay_test": "Not performed by this script; test the new DLL in the game."
+  }
+}
