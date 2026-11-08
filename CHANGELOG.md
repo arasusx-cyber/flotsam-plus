@@ -9,7 +9,8 @@
 - Skill grants preserve XP, character levels and research points; normal saves preserve granted points.
 - Five Polish F8 menu tabs, per-feature compatibility handling, and reset support for new options.
 - 27 logic checks and 68 game API/IL checks; build without errors or warnings.
-- Gameplay validation of 1.2.0 is pending. The user confirmed 1.1.0 working on 2026-11-08.
+- The user confirmed 1.2.0 working in a running game on 2026-11-08.
+- Added the user-supplied Flotsam Plus 1.2.0 in-game menu screenshot to both READMEs; updated validation notes and packaged documentation.
 
 ## 1.1.0 — 2026-11-07
 

@@ -6,6 +6,8 @@ Polskie menu **F8**: ustawienia statku, mieszkańcy i punkty umiejętności, odk
 
 Windows x64 · BepInEx 5.4.x · Wersja 1.2.0
 
+**Działanie 1.2.0 potwierdzone w grze przez użytkownika 8 listopada 2026.**
+
 ## Funkcje
 
 | Zakładka | Opcje |
@@ -42,9 +44,15 @@ BepInEx/plugins/FlotsamPuchatekPlus/FlotsamPuchatekPlus.dll
 
 Nie zostawiaj drugiej kopii tego samego pluginu pod inną nazwą. Przy pierwszej instalacji potrzebny jest [BepInEx 5.4.21 x64](https://github.com/BepInEx/BepInEx/releases/tag/v5.4.21).
 
+## Menu w grze
+
+![Menu Flotsam Plus 1.2.0 w grze](docs/images/menu-1.2.0.png)
+
+*Menu F8 Flotsam Plus 1.2.0 — zrzut przekazany przez użytkownika po potwierdzeniu działania moda.*
+
 ## Sprawdzenie wersji 1.2.0
 
-Kompilacja: 0 błędów i 0 ostrzeżeń. Przeszło 27 testów kolejki/mnożników/punktów oraz 68 kontroli API i kodu IL względem dostarczonej DLL Flotsam. **Nowej wersji nie sprawdzono jeszcze w uruchomionej grze.**
+Kompilacja: 0 błędów i 0 ostrzeżeń. Przeszło 27 testów kolejki/mnożników/punktów oraz 68 kontroli API i kodu IL względem dostarczonej DLL Flotsam. **Użytkownik potwierdził działanie wersji 1.2.0 w uruchomionej grze 8 listopada 2026.**
 
 [Poprzednia paczka 1.1.0](https://github.com/arasusx-cyber/flotsam-plus/raw/refs/heads/main/dist/Flotsam_Plus_1.1.0.zip) — działanie potwierdzone przez użytkownika 8 listopada 2026.
 

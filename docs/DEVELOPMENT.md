@@ -71,14 +71,14 @@ Punkty są dodawane do prywatnego pola SpendablePoints konkretnego DrifterAttrib
 
 Mapa podnosi ScoutingState istniejących, aktywnych spawnerów do Scouted. Nie wywołuje Region.Scout, StartQuest ani generowania następnych części świata; nie ustawia flag wykonania zwiadu. Zablokowane spawners fabularne są pomijane. Kolory siatki mgły są zerowane w tej samej tablicy _colors, którą czyta natywne ReturnAlphas przy zapisie. Operacja obejmuje tylko instancje mgły należące do części bieżącego świata. Automatyczna opcja ponawia odkrywanie raz na sekundę, również po inicjalizacji nowych siatek.
 
-Te kontrole nie zastępują testu w grze: trzeba sprawdzić menu, chód/pływanie/wyspy, rozdanie punktów, zapis i ponowne wczytanie oraz odkrywanie nowego obszaru podczas podróży.
+Kontrole automatyczne nie uruchamiają gry. Użytkownik potwierdził działanie wydania 1.2.0 8 listopada 2026. Przy kolejnych zmianach sprawdzać menu, chód/pływanie/wyspy, rozdanie punktów, zapis i ponowne wczytanie oraz odkrywanie nowego obszaru podczas podróży.
 
 ## Zgodność 1.2.0
 
 - Assembly-CSharp.dll: SHA-256 `5b5c9f730ed71d5f66c0267064fc57667d2ff5644a018e9189b140ce025c1cd8`.
 - Kompilacja: .NET SDK 8.0.427, BepInEx 5.4.21, referencje UnityEngine.Modules 2021.3.33.
 - 27 testów logiki i 68 kontroli API/IL przeszło; kompilacja bez błędów i ostrzeżeń.
-- **Test w uruchomionej grze: jeszcze niewykonany.** Inne wersje gry wymagają własnego sprawdzenia.
+- **Działanie 1.2.0 w uruchomionej grze użytkownik potwierdził 8 listopada 2026.** Jest to zgłoszenie użytkownika, odrębne od kontroli automatycznych.
 - Działanie poprzedniej DLL 1.1.0 użytkownik potwierdził 8 listopada 2026; paczki 1.0.0 i 1.1.0 pozostają dostępne.
 
 ## GitHub Actions i wersjonowanie
