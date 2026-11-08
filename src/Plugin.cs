@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Puchatek.FlotsamPlus
 {
-    [BepInPlugin(Guid, "Flotsam Plus", "1.1.0")]
+    [BepInPlugin(Guid, "Flotsam Plus", "1.2.0")]
     [BepInProcess("Flotsam.exe")]
     public sealed class Plugin : BaseUnityPlugin
     {
@@ -27,12 +27,17 @@ namespace Puchatek.FlotsamPlus
         internal ConfigEntry<float> ShipAcceleration;
         internal ConfigEntry<float> ShipBraking;
         internal ConfigEntry<float> ResearchSpeed;
+        internal ConfigEntry<float> ResidentSpeed;
+        internal ConfigEntry<bool> AutoReveal;
         internal bool ShipReady;
         internal bool PhysicsReady;
         internal bool EnergyReady;
         internal bool BuildingReady;
         internal bool ResearchReady;
         internal bool RestReady;
+        internal bool ResidentsReady;
+        private bool _pointsReady;
+        private bool _mapReady;
         private ConfigEntry<KeyCode> _menuKey;
         private Harmony _harmony;
         private bool _open;
@@ -41,7 +46,7 @@ namespace Puchatek.FlotsamPlus
         private Vector2 _scroll;
         private Vector2 _settingsScroll;
         private int _tab;
-        private static readonly string[] Tabs = { "Statek", "Mieszkańcy", "Budowa i badania", "Surowce" };
+        private static readonly string[] Tabs = { "Statek", "Mieszkańcy", "Budowa i badania", "Surowce", "Mapa" };
         private GUIStyle _headerStyle;
         private GUIStyle _smallStyle;
         private GUIStyle _messageStyle;
@@ -60,6 +65,13 @@ namespace Puchatek.FlotsamPlus
         private float _nextRefresh;
         private float _nextCountRefresh;
         private int _selectedCount;
+        private readonly List<Agent> _residents = new List<Agent>();
+        private Agent _selectedResident;
+        private Vector2 _residentsScroll;
+        private string _pointAmount = "5";
+        private string _residentMessage = "Wybierz mieszkańca, aby dodać punkty umiejętności.";
+        private string _mapMessage = "Odkrywanie obejmuje wszystkie wygenerowane części bieżącego świata.";
+        private float _nextMapReveal;
 
         private sealed class ResourceEntry
         {
@@ -87,6 +99,9 @@ namespace Puchatek.FlotsamPlus
             ShipAcceleration = BindMultiplier("Statek", "Przyspieszenie", 5f);
             ShipBraking = BindMultiplier("Statek", "Hamowanie", 5f);
             ResearchSpeed = BindMultiplier("Badania", "SzybkoscBadan", 100f);
+            ResidentSpeed = BindMultiplier("Mieszkancy", "PredkoscRuchu", 5f);
+            AutoReveal = Config.Bind("Mapa", "AutomatyczneOdkrywanie", false,
+                "Odkrywa dostępną mapę oraz kolejne części świata po ich wygenerowaniu.");
             _menuKey = Config.Bind("Menu", "Klawisz", KeyCode.F8,
                 "Klawisz otwierający i zamykający menu dodatku.");
             _harmony = new Harmony(Guid);
@@ -103,7 +118,21 @@ namespace Puchatek.FlotsamPlus
             BuildingReady = PatchGroup("Budowanie", typeof(InstantBuildingPatch));
             ResearchReady = PatchGroup("Badania", typeof(ResearchSpeedPatch));
             RestReady = PatchGroup("Sen", typeof(RestNightPatch));
-            Logger.LogInfo("Flotsam Plus 1.1.0 gotowy. Menu: " + _menuKey.Value);
+            ResidentsReady = PatchGroup("Ruch mieszkańców", typeof(ResidentSpeedPatch),
+                typeof(ResidentNavMeshSpeedPatch));
+            _pointsReady = InitializeAction("Punkty umiejętności", ResidentTools.InitializePoints);
+            _mapReady = InitializeAction("Odkrywanie mapy", MapTools.Initialize);
+            Logger.LogInfo("Flotsam Plus 1.2.0 gotowy. Menu: " + _menuKey.Value);
+        }
+
+        private bool InitializeAction(string name, Action initialize)
+        {
+            try { initialize(); return true; }
+            catch (Exception error)
+            {
+                Logger.LogError("Nie uruchomiono grupy: " + name + ". " + error);
+                return false;
+            }
         }
 
         private ConfigEntry<float> BindMultiplier(string section, string key, float maximum)
@@ -170,13 +199,26 @@ namespace Puchatek.FlotsamPlus
                 _items.Clear();
                 _filtered.Clear();
                 _selected = null;
+                _residents.Clear();
+                _selectedResident = null;
+                _residentMessage = "Wybierz mieszkańca, aby dodać punkty umiejętności.";
+                _mapMessage = "Odkrywanie obejmuje wszystkie wygenerowane części bieżącego świata.";
+                _nextMapReveal = 0;
                 _nextRefresh = 0;
                 if (current != null) ApplyNeedsNow();
             }
             if (_open && current != null && Time.unscaledTime >= _nextRefresh)
             {
                 if (_items.Count == 0) RefreshItems();
+                RefreshResidents();
                 _nextRefresh = Time.unscaledTime + 2f;
+            }
+            if (_mapReady && AutoReveal.Value && current != null &&
+                Time.unscaledTime >= _nextMapReveal && GameManager.WorldManager != null &&
+                GameManager.WorldManager.World != null)
+            {
+                _nextMapReveal = Time.unscaledTime + 1f;
+                RevealMap(true);
             }
             if (_batch != null && !_batch.Finished)
             {
@@ -377,7 +419,7 @@ namespace Puchatek.FlotsamPlus
             {
                 GUI.enabled = true;
                 GUI.color = Color.white;
-                _window = GUI.Window(7408162, _window, DrawWindow, "Flotsam Plus 1.1.0");
+                _window = GUI.Window(7408162, _window, DrawWindow, "Flotsam Plus 1.2.0");
             }
             finally { GUI.enabled = oldEnabled; GUI.color = oldColor; }
         }
@@ -398,6 +440,7 @@ namespace Puchatek.FlotsamPlus
                 _settingsScroll = GUILayout.BeginScrollView(_settingsScroll, GUILayout.ExpandHeight(true));
                 if (_tab == 0) DrawShip();
                 else if (_tab == 1) DrawResidents();
+                else if (_tab == 4) DrawMap();
                 else DrawBuildingAndResearch();
                 GUILayout.EndScrollView();
             }
@@ -431,7 +474,131 @@ namespace Puchatek.FlotsamPlus
             GUILayout.Space(8);
             GUILayout.Label("Opcje dotyczą mieszkańców Twojej osady. Nie rozpoczynają nocnego snu. Rozpoczęty wcześniej odpoczynek kończy się normalnie.",
                 _smallStyle);
-            DrawAvailability(_patchesReady && RestReady);
+            GUILayout.Space(10);
+            DrawMultiplier(ResidentSpeed, "Szybkość chodzenia i pływania", 5f, ResidentsReady);
+            GUILayout.Label("Dotyczy żywych mieszkańców Twojej osady, także podczas chodzenia po wyspach.", _smallStyle);
+            DrawAvailability(_patchesReady && RestReady && ResidentsReady);
+            GUILayout.Space(12);
+            DrawResidentPoints();
+        }
+
+        private void RefreshResidents()
+        {
+            _residents.Clear();
+            if (!IsPlayer(_community)) return;
+            foreach (Agent agent in _community.Agents)
+                if (ResidentTools.IsResident(agent, _community) && agent.Attributes != null)
+                    _residents.Add(agent);
+            _residents.Sort((a, b) => string.Compare(a.Name, b.Name,
+                StringComparison.CurrentCultureIgnoreCase));
+            if (!_residents.Contains(_selectedResident)) _selectedResident = null;
+        }
+
+        private void DrawResidentPoints()
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Punkty umiejętności", _headerStyle);
+            GUI.enabled = IsPlayer(_community);
+            if (GUILayout.Button("Odśwież listę", GUILayout.Width(110))) RefreshResidents();
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+            if (!IsPlayer(_community))
+            {
+                GUILayout.Label("Wczytaj zapis, aby wybrać mieszkańca.", _smallStyle);
+                return;
+            }
+            _residentsScroll = GUILayout.BeginScrollView(_residentsScroll, GUI.skin.box,
+                GUILayout.Height(125));
+            foreach (Agent resident in _residents)
+            {
+                if (!ResidentTools.IsResident(resident, _community) || resident.Attributes == null) continue;
+                Color before = GUI.backgroundColor;
+                if (ReferenceEquals(resident, _selectedResident))
+                    GUI.backgroundColor = new Color(.45f, .85f, .9f);
+                if (GUILayout.Button(resident.Name + "  |  poziom " + resident.Attributes.Level +
+                    "  |  punkty: " + resident.Attributes.SpendablePoints, GUILayout.Height(26)))
+                    _selectedResident = resident;
+                GUI.backgroundColor = before;
+            }
+            if (_residents.Count == 0) GUILayout.Label("Brak dostępnych mieszkańców.");
+            GUILayout.EndScrollView();
+            bool valid = ResidentTools.IsResident(_selectedResident, _community) &&
+                _selectedResident.Attributes != null;
+            GUILayout.Label(valid ? "Wybrano: " + _selectedResident.Name + "  |  do rozdania: " +
+                _selectedResident.Attributes.SpendablePoints : "Wybierz mieszkańca z listy.", _smallStyle);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Punkty:", GUILayout.Width(50));
+            _pointAmount = GUILayout.TextField(_pointAmount, 3, GUILayout.Width(45));
+            foreach (int amount in new[] { 1, 5, 10, 50, 100 })
+                if (GUILayout.Button(amount.ToString(), GUILayout.Width(38))) _pointAmount = amount.ToString();
+            GUI.enabled = _pointsReady && valid;
+            if (GUILayout.Button("Dodaj punkty", GUILayout.Height(28))) AddResidentPoints();
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+            GUILayout.Box(_residentMessage, _messageStyle);
+            GUILayout.Label("Od 1 do 100 punktów na kliknięcie. Rozdaj je w zwykłym panelu postaci. " +
+                "Poziom i XP pozostają bez zmian; nadal obowiązują limity umiejętności gry.", _smallStyle);
+            DrawAvailability(_pointsReady);
+        }
+
+        private void AddResidentPoints()
+        {
+            if (!_pointsReady) return;
+            if (!int.TryParse(_pointAmount, out int amount) || amount < 1 || amount > PointGrant.Maximum)
+            {
+                _residentMessage = "Wpisz od 1 do 100 punktów.";
+                return;
+            }
+            try
+            {
+                int total = ResidentTools.AddPoints(_selectedResident, _community, amount);
+                _residentMessage = "Dodano " + amount + " punktów dla: " + _selectedResident.Name +
+                    ". Do rozdania: " + total + ".";
+            }
+            catch (Exception error)
+            {
+                ReportError("Nie udało się dodać punktów umiejętności.", error);
+                _residentMessage = _message;
+            }
+        }
+
+        private void DrawMap()
+        {
+            GUILayout.Label("Odkrywanie mapy", _headerStyle);
+            GUILayout.Label("Odsłania mgłę i istniejące miejsca we wszystkich wygenerowanych częściach bieżącego świata.",
+                _smallStyle);
+            GUILayout.Space(8);
+            GUI.enabled = _mapReady && IsPlayer(_community) && GameManager.WorldManager != null &&
+                GameManager.WorldManager.World != null;
+            if (GUILayout.Button("Odkryj całą dostępną mapę", GUILayout.Height(34))) RevealMap(false);
+            GUI.enabled = true;
+            if (DrawToggle(AutoReveal, " Automatycznie odkrywaj także nowe obszary", _mapReady))
+                _nextMapReveal = 0;
+            GUILayout.Space(10);
+            GUILayout.Box(_mapMessage, _messageStyle, GUILayout.MinHeight(50));
+            GUILayout.Label("Świat powstaje etapami. Automatyczne odkrywanie obejmie kolejne obszary, " +
+                "gdy pojawią się podczas podróży. Zablokowane miejsca fabularne pozostają pod kontrolą gry.", _smallStyle);
+            GUILayout.Space(8);
+            GUILayout.Label("Odkryte miejsca i dodane punkty umiejętności zostają w zapisie. Wyłączenie opcji ani reset ich nie cofa.",
+                _smallStyle);
+            DrawAvailability(_mapReady);
+        }
+
+        private void RevealMap(bool automatic)
+        {
+            if (!_mapReady || !IsPlayer(_community)) return;
+            try
+            {
+                if (GameManager.WorldManager == null || GameManager.WorldManager.World == null)
+                    throw new InvalidOperationException("Najpierw wczytaj zapis gry.");
+                _mapMessage = MapTools.Reveal(GameManager.WorldManager.World);
+            }
+            catch (Exception error)
+            {
+                if (automatic) AutoReveal.Value = false;
+                ReportError("Nie udało się odkryć mapy.", error);
+                _mapMessage = _message;
+            }
         }
 
         private void DrawBuildingAndResearch()
@@ -452,8 +619,11 @@ namespace Puchatek.FlotsamPlus
                 ResetShipSettings();
                 NoHunger.Value = NoThirst.Value = NoRest.Value = InstantBuild.Value = false;
                 ResearchSpeed.Value = 1f;
+                ResidentSpeed.Value = 1f;
+                AutoReveal.Value = false;
+                ResidentTools.RefreshNavMeshes(_community);
             }
-            GUILayout.Label("Reset ustawień nie cofa już dodanych surowców, ukończonych budynków ani badań.",
+            GUILayout.Label("Reset nie cofa dodanych surowców i punktów umiejętności, odkrytej mapy, ukończonych budynków ani badań.",
                 _smallStyle);
         }
 
@@ -551,6 +721,9 @@ namespace Puchatek.FlotsamPlus
 
         private void OnDestroy()
         {
+            ResidentsReady = false;
+            try { ResidentTools.RefreshNavMeshes(_community); }
+            catch (Exception error) { Logger.LogError("Nie przywrócono szybkości nawigacji: " + error); }
             ShipPhysics.RestoreAll();
             if (_batch != null) _batch.Cancel("Dodatek wyłączony.");
             if (_harmony != null) _harmony.UnpatchSelf();
