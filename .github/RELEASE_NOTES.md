@@ -1,13 +1,16 @@
-# Flotsam Plus 1.2.0
+# Flotsam Plus 1.3.0
 
-- Odkrycie całej wygenerowanej mapy i automatyczne odsłanianie kolejnych obszarów.
-- Suwak chodzenia i pływania mieszkańców ×1–×5, również na wyspach.
-- Wybór mieszkańca i dodawanie 1–100 punktów umiejętności do rozdania w panelu postaci.
-- Zachowane XP, poziom, punkty badań i limity umiejętności.
-- Pięć zakładek w polskim menu F8; wszystkie opcje 1.1.0 pozostają dostępne.
+- **PL / EN:** zmiana języka menu bez restartu; wybór jest zapamiętywany.
+- **Udźwig osady ×1–×100** i **wyłączenie limitu wagi**, aby dalej rozbudowywać osadę.
+- Zachowane wszystkie funkcje 1.2.0, dotychczasowa konfiguracja i normalne pojemności magazynów.
+- Instrukcja instalacji w paczce po polsku i angielsku.
 
-Mapa powstaje etapami. Odkrywanie obejmuje dostępne części świata i nie wymusza przyszłych biomów ani zadań fabularnych. Odkrycia i dodane punkty zostają w zapisie; reset ustawień ich nie cofa.
+**F8 → Statek**: ustaw udźwig lub zaznacz wyłączenie limitu. Język zmienisz u góry menu. Zamknij grę i nadpisz dotychczasową DLL, wypakowując `BepInEx` obok `Flotsam.exe`.
 
-Zamknij grę i nadpisz dotychczasową DLL, wypakowując BepInEx z paczki do katalogu z Flotsam.exe. Menu: F8. Nie dodawaj drugiej kopii pluginu.
+43 testy logiki i 82 kontrole API/IL; kompilacja bez błędów i ostrzeżeń. Nowe opcje 1.3.0 wymagają potwierdzenia w uruchomionej grze. Poprzednia 1.2.0 została potwierdzona przez użytkownika.
 
-Przeszło 27 testów logiki i 68 kontroli API/IL. Użytkownik potwierdził działanie 1.2.0 w uruchomionej grze 8 listopada 2026. Dodano przesłany zrzut menu Flotsam Plus z gry do dokumentacji repozytorium.
+---
+
+Live **PL/EN** menu switching, **town capacity ×1–×100**, and a **disable weight limit** switch. Open **F8 → Ship**; choose **EN** at the top. Replace the existing DLL with the ZIP's `BepInEx` folder. All earlier features remain available.
+
+43 logic and 82 game API/IL checks pass. New 1.3.0 gameplay awaits confirmation; 1.2.0 was confirmed working by the user.
