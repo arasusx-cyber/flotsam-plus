@@ -60,6 +60,7 @@ internal static class Program
         TuningChecks.Run(Check);
         PointGrantChecks.Run(Check);
         LocalizationCapacityChecks.Run(Check);
+        WindowChecks.Run(Check);
         Console.WriteLine("Passed " + _checks + " checks.");
     }
 }

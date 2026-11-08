@@ -117,6 +117,11 @@ internal static class GameApiChecks
                         Calls(m, "Engine", "get_TownAvailableTugCapacity")))
                     .Select(m => m.DeclaringType.FullName + "." + m.Name)));
 
+            Method("FlotsamInputManager", "GetAxis", "System.Single", "System.Int32");
+            Method("FlotsamInputManager", "GetAxisRaw", "System.Single", "System.Int32");
+            Method("FlotsamInputManager", "GetCameraZoom", "System.Single");
+            Method("FlotsamInputManager", "GetCameraRotation", "System.Single");
+
             var building = new List<MethodDefinition>();
             foreach (string name in new[] { "StartBuilding", "Upgrade", "TryToStartUpgrade", "StartUpgrade" })
                 building.Add(Method("Buildable", name, "System.Void"));
@@ -199,7 +204,7 @@ internal static class GameApiChecks
 
             using (AssemblyDefinition plugin = AssemblyDefinition.ReadAssembly(args[1]))
             {
-                Check(plugin.Name.Version.ToString() == "1.3.0.0", "Built plugin has release version 1.3.0");
+                Check(plugin.Name.Version.ToString() == "1.4.0.0", "Built plugin has release version 1.4.0");
                 string[] expected = {
                     "ShipSpeedPatch", "ShipTurningPatch", "PathMovementPatch", "TravelEnergyPatch",
                     "TravelCostPatch", "TravelRangePatch", "TravelCooldownPatch", "InstantBuildingPatch",
@@ -218,6 +223,37 @@ internal static class GameApiChecks
                         Reads(callback, "Puchatek.FlotsamPlus.Plugin", "CapacityReady") > 0,
                         name + " checks compatibility and player ownership in the built DLL");
                 }
+                TypeDefinition ui = plugin.MainModule.Types.Single(t => t.Name == "Plugin");
+                MethodDefinition drawUi = ui.Methods.Single(m => m.Name == "OnGUI");
+                Check(Calls(drawUi, "Puchatek.FlotsamPlus.WindowLayout", "Fit") &&
+                    Calls(drawUi, "Puchatek.FlotsamPlus.WindowAppearance", "Ensure") &&
+                    drawUi.Body.ExceptionHandlers.Any(h => h.HandlerType == ExceptionHandlerType.Finally),
+                    "The menu projects window bounds and restores GUI state in a finally block");
+                Check(drawUi.Body.Instructions.Count(i => i.Operand is MethodReference call &&
+                    call.DeclaringType.FullName == "UnityEngine.GUI" && call.Name == "set_skin") == 2 &&
+                    drawUi.Body.Instructions.Count(i => i.Operand is MethodReference call &&
+                    call.DeclaringType.FullName == "UnityEngine.GUI" && call.Name == "set_matrix") == 2,
+                    "The private skin and pixel matrix are installed and restored symmetrically");
+                MethodDefinition capture = ui.Methods.Single(m => m.Name == "CapturesWindowInput");
+                Check(Reads(capture, ui.FullName, "_resizing") > 0 &&
+                    Reads(capture, ui.FullName, "_captureMouseRelease") > 0 &&
+                    Calls(ui.Methods.Single(m => m.Name == "BlockGameplayInput"), ui.FullName, "CapturesWindowInput"),
+                    "Menu input remains captured when a resize leaves the window rectangle");
+                MethodDefinition cleanup = ui.Methods.Single(m => m.Name == "DisposeWindowPreferences");
+                MethodDefinition dispose = plugin.MainModule.Types.Single(t => t.Name == "WindowAppearance")
+                    .Methods.Single(m => m.Name == "Dispose");
+                Check(Calls(ui.Methods.Single(m => m.Name == "OnDestroy"), ui.FullName, "DisposeWindowPreferences") &&
+                    Calls(cleanup, "Puchatek.FlotsamPlus.WindowAppearance", "Dispose") &&
+                    Calls(dispose, "UnityEngine.Object", "Destroy"),
+                    "Unloading saves preferences and destroys the owned skin and textures");
+                MethodDefinition resetUi = ui.Methods.Single(m => m.Name == "ResetWindowPreferences");
+                Check(!Calls(resetUi, ui.FullName, "ResetShipSettings") &&
+                    Calls(resetUi, ui.FullName, "SaveWindowPreferences"),
+                    "Emergency window reset saves appearance without resetting ship tuning");
+                Check(plugin.MainModule.Types.Any(t => t.Name == "MenuAxisInputPatch" &&
+                    t.CustomAttributes.Any(a => a.AttributeType.Name == "HarmonyPatch")),
+                    "Scroll/zoom interception is included alongside the button input patch");
+
                 MethodDefinition grant = plugin.MainModule.Types.Single(t => t.Name == "ResidentTools")
                     .Methods.Single(m => m.Name == "AddPoints");
                 Check(Calls(grant, "DrifterAttributes", "get_AvailableSpendingPointsUpdatedEvent") &&
